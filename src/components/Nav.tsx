@@ -43,13 +43,20 @@ export default function Nav() {
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
           使い方ガイド
         </Link>
-        {currentUser && (
+        {(currentUser || isDeveloper) && (
           <nav className="flex items-center gap-3 text-sm">
-            <Link href="/family" className="text-slate-600 hover:text-indigo-600">
-              家族・権限
-            </Link>
-            <Link href="/tasks" className="text-slate-600 hover:text-indigo-600">
-              課題・目標
+            {currentUser && (
+              <>
+                <Link href="/family" className="text-slate-600 hover:text-indigo-600">
+                  家族・権限
+                </Link>
+                <Link href="/tasks" className="text-slate-600 hover:text-indigo-600">
+                  課題・目標
+                </Link>
+              </>
+            )}
+            <Link href="/feedback" className="text-slate-600 hover:text-indigo-600">
+              フィードバック
             </Link>
             {isDeveloper && (
               <Link href="/dev" className="text-slate-600 hover:text-indigo-600">
@@ -57,10 +64,12 @@ export default function Nav() {
               </Link>
             )}
             <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="hidden sm:inline text-slate-500">
-              {currentUser.name}
-              <span className="ml-1 text-xs text-slate-400">({ROLE_LABEL[currentUser.role]})</span>
-            </span>
+            {currentUser && (
+              <span className="hidden sm:inline text-slate-500">
+                {currentUser.name}
+                <span className="ml-1 text-xs text-slate-400">({ROLE_LABEL[currentUser.role]})</span>
+              </span>
+            )}
             {switchableAccounts.length > 0 && (
               <select
                 value=""

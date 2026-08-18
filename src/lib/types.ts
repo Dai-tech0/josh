@@ -94,6 +94,15 @@ export interface AppData {
   familyDefaults: Record<string, FamilyDefaults>; // key: adminId
 }
 
+// 全ユーザー共通の掲示板（テスト運用中のフィードバック収集用）
+export interface FeedbackPost {
+  id: string;
+  authorName: string;
+  authorRole: Role | "developer";
+  message: string;
+  createdAt: string; // ISO datetime
+}
+
 // 日次報告の自動評価（3段階シール）
 export type AchievementTier = "exceeded" | "met" | "missed";
 // exceeded = ノルマ以上達成 →「大変よくできました」

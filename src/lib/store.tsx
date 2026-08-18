@@ -30,6 +30,7 @@ import {
   getDoc,
   getDocs,
   onSnapshot,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -44,6 +45,7 @@ import type {
   ChildUser,
   DailyLog,
   FamilyDefaults,
+  FeedbackPost,
   HomeworkTask,
   PauseRule,
   Role,
@@ -216,6 +218,9 @@ interface StoreContextValue {
   reportLog: (taskId: string, date: string, doneAmount: number) => Promise<void>;
   // 設定の継承（共通デフォルト＋個別上書き）
   updateFamilyDefaults: (adminId: string, patch: Partial<FamilyDefaults>) => Promise<void>;
+  // 全ユーザー共通のフィードバック掲示板
+  feedbackPosts: FeedbackPost[];
+  postFeedback: (message: string) => Promise<void>;
   // ヘルパー
   getChildrenOfAdmin: (adminId: string) => ChildUser[];
   getSharersOfChild: (childId: string) => SharerUser[];
@@ -244,6 +249,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [knownCodeAccounts, setKnownCodeAccounts] = useState<KnownCodeAccount[]>([]);
   const pendingCodeRef = useRef<string | null>(null);
+
+  const [feedbackPosts, setFeedbackPosts] = useState<FeedbackPost[]>([]);
 
   useEffect(() => {
     // 初回マウント時に一度だけ localStorage（外部ストア）から読み込む
@@ -331,6 +338,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [firebaseUser]);
+
+  // 2c. 全ユーザー共通のフィードバック掲示板を購読（家族の垣根を越えて共有）
+  useEffect(() => {
+    if (!firebaseUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFeedbackPosts([]);
+      return;
+    }
+    const unsub = onSnapshot(
+      query(collection(db, "feedback"), orderBy("createdAt", "desc")),
+      (snap) => {
+        setFeedbackPosts(
+          snap.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              authorName: data.authorName as string,
+              authorRole: data.authorRole as FeedbackPost["authorRole"],
+              message: data.message as string,
+              createdAt: data.createdAt as string,
+            };
+          })
+        );
+      }
+    );
+    return unsub;
   }, [firebaseUser]);
 
   // 3. familyIdが分かったら家族データをリアルタイム購読
@@ -680,6 +714,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [familyDefaultsDoc]
   );
 
+  const postFeedback = useCallback(
+    async (message: string) => {
+      if (!firebaseUser) throw new Error("認証されていません");
+      const trimmed = message.trim();
+      if (!trimmed) return;
+      const authorName = currentUser?.name ?? (isDeveloper ? "開発者" : firebaseUser.email ?? "匿名");
+      const authorRole: FeedbackPost["authorRole"] = currentUser?.role ?? "developer";
+      const ref = doc(collection(db, "feedback"));
+      await setDoc(ref, {
+        authorId: firebaseUser.uid,
+        authorName,
+        authorRole,
+        message: trimmed,
+        createdAt: new Date().toISOString(),
+      });
+    },
+    [firebaseUser, currentUser, isDeveloper]
+  );
+
   const getChildrenOfAdmin = useCallback(
     (adminId: string) => data.children.filter((c) => c.adminId === adminId),
     [data]
@@ -729,6 +782,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteTask,
     reportLog,
     updateFamilyDefaults,
+    feedbackPosts,
+    postFeedback,
     getChildrenOfAdmin,
     getSharersOfChild,
     getTasksOfChild,
