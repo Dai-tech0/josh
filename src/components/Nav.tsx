@@ -16,9 +16,12 @@ export default function Nav() {
   if (!hydrated) {
     return (
       <header className="border-b border-slate-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-3">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="font-bold text-lg tracking-tight text-indigo-600">
             YATTANE
+          </Link>
+          <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
+            使い方ガイド
           </Link>
         </div>
       </header>
@@ -36,6 +39,9 @@ export default function Nav() {
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
         <Link href="/" className="font-bold text-lg tracking-tight text-indigo-600">
           YATTANE
+        </Link>
+        <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
+          使い方ガイド
         </Link>
         {currentUser && (
           <nav className="flex items-center gap-3 text-sm">
