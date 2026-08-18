@@ -10,7 +10,8 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function Nav() {
-  const { hydrated, currentUser, logout } = useStore();
+  const { hydrated, currentUser, isDeveloper, logout, knownCodeAccounts, loginWithCode } =
+    useStore();
 
   if (!hydrated) {
     return (
@@ -23,6 +24,12 @@ export default function Nav() {
       </header>
     );
   }
+
+  const isCodeAccount = currentUser?.role === "owner" || currentUser?.role === "viewer";
+  const currentCode = knownCodeAccounts.find((a) => a.name === currentUser?.name)?.code;
+  const switchableAccounts = isCodeAccount
+    ? knownCodeAccounts.filter((a) => a.code !== currentCode)
+    : [];
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -38,11 +45,32 @@ export default function Nav() {
             <Link href="/tasks" className="text-slate-600 hover:text-indigo-600">
               課題・目標
             </Link>
+            {isDeveloper && (
+              <Link href="/dev" className="text-slate-600 hover:text-indigo-600">
+                開発者
+              </Link>
+            )}
             <span className="hidden sm:inline text-slate-300">|</span>
             <span className="hidden sm:inline text-slate-500">
               {currentUser.name}
               <span className="ml-1 text-xs text-slate-400">({ROLE_LABEL[currentUser.role]})</span>
             </span>
+            {switchableAccounts.length > 0 && (
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) loginWithCode(e.target.value);
+                }}
+                className="border border-slate-300 rounded px-2 py-1 text-xs bg-white text-slate-600"
+              >
+                <option value="">他のアカウントに切替</option>
+                {switchableAccounts.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.name}（{a.role === "owner" ? "子供" : "共有者"}）
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={() => logout()}
               className="text-slate-500 hover:text-red-500 underline underline-offset-2"

@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,8 +14,12 @@ import { initializeApp, deleteApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getAuth,
+  isSignInWithEmailLink,
   onAuthStateChanged,
+  sendPasswordResetEmail,
+  sendSignInLinkToEmail,
   signInWithEmailAndPassword,
+  signInWithEmailLink,
   signOut,
   type User,
 } from "firebase/auth";
@@ -49,6 +54,42 @@ import type {
 } from "./types";
 import { emptyPauseRule } from "./allocation";
 import { addDays, todayISO } from "./date";
+
+// メールリンク(パスワードレス)ログイン: 送信時にメールアドレスを覚えておき、
+// リンクから戻ってきたときに signInWithEmailLink へ渡す（同一端末での折り返しを想定）
+const EMAIL_LINK_STORAGE_KEY = "yattane:emailForSignIn";
+
+// このデバイスで使ったことのあるログインコードを覚えておき、再入力なしで切り替えられるようにする
+const KNOWN_CODES_KEY = "yattane:knownCodeAccounts";
+
+export interface KnownCodeAccount {
+  code: string;
+  name: string;
+  role: "owner" | "viewer";
+}
+
+function loadKnownCodeAccounts(): KnownCodeAccount[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(KNOWN_CODES_KEY);
+    return raw ? (JSON.parse(raw) as KnownCodeAccount[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveKnownCodeAccount(account: KnownCodeAccount) {
+  if (typeof window === "undefined") return;
+  const list = loadKnownCodeAccounts().filter((a) => a.code !== account.code);
+  list.unshift(account);
+  window.localStorage.setItem(KNOWN_CODES_KEY, JSON.stringify(list.slice(0, 10)));
+}
+
+function removeKnownCodeAccount(code: string) {
+  if (typeof window === "undefined") return;
+  const list = loadKnownCodeAccounts().filter((a) => a.code !== code);
+  window.localStorage.setItem(KNOWN_CODES_KEY, JSON.stringify(list));
+}
 
 function defaultFamilyDefaults(): FamilyDefaults {
   return {
@@ -138,11 +179,19 @@ interface StoreContextValue {
   currentUser: AppUser | null;
   currentUserId: string | null;
   authError: string | null;
+  isDeveloper: boolean;
+  needsAdminProfile: boolean;
   // 認証
   signUpAdmin: (email: string, password: string, name: string) => Promise<void>;
   loginAdmin: (email: string, password: string) => Promise<void>;
   loginWithCode: (code: string) => Promise<void>;
+  sendLoginLink: (email: string) => Promise<void>;
+  finishAdminProfile: (name: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
+  // このデバイスで使ったログインコードのクイック切替
+  knownCodeAccounts: KnownCodeAccount[];
+  forgetCodeAccount: (code: string) => void;
   // 権限モデル（セクション2）
   updateAdmin: (adminId: string, name: string) => Promise<void>;
   addChild: (name: string) => Promise<ChildUser>;
@@ -185,12 +234,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<Role | null>(null);
   const [resolvingFamily, setResolvingFamily] = useState(false);
+  const [isDeveloper, setIsDeveloper] = useState(false);
 
   const [adminName, setAdminName] = useState("");
   const [familyDefaultsDoc, setFamilyDefaultsDoc] = useState<FamilyDefaults | null>(null);
   const [members, setMembers] = useState<Array<{ id: string } & MemberDoc>>([]);
   const [tasks, setTasks] = useState<HomeworkTask[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
+
+  const [knownCodeAccounts, setKnownCodeAccounts] = useState<KnownCodeAccount[]>([]);
+  const pendingCodeRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // 初回マウント時に一度だけ localStorage（外部ストア）から読み込む
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKnownCodeAccounts(loadKnownCodeAccounts());
+  }, []);
 
   // 1. Firebase Authのログイン状態を監視
   useEffect(() => {
@@ -201,7 +260,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return unsub;
   }, []);
 
+  // 1b. メールのログインリンクをクリックして戻ってきた場合、ログインを完了させる
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isSignInWithEmailLink(auth, window.location.href)) return;
+    let email = window.localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
+    if (!email) {
+      email = window.prompt("確認のため、ログインリンクを送ったメールアドレスを入力してください");
+    }
+    if (!email) return;
+    signInWithEmailLink(auth, email, window.location.href)
+      .then(() => {
+        window.localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
+        window.history.replaceState(null, "", window.location.pathname);
+      })
+      .catch((e: { code?: string }) => {
+        setAuthError(translateAuthError(e?.code));
+      });
+  }, []);
+
   // 2. ログインユーザーがどの家族に属するか(familyId・role)を解決
+  // サインアップ直後は「ログイン検知」と「家族データ(memberIndex)の作成」が並行して走るため、
+  // 一度きりのgetDocだと書き込み前に読んでしまい停止することがある。
+  // onSnapshotで購読し続けることで、後から作成されても自動的に解決されるようにする。
   useEffect(() => {
     if (!firebaseUser) {
       // Firebase Auth（外部ストア）のログアウトに合わせて内部状態をリセットする
@@ -210,12 +291,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setMyRole(null);
       return;
     }
-    let cancelled = false;
     setResolvingFamily(true);
-    (async () => {
-      try {
-        const idxSnap = await getDoc(doc(db, "memberIndex", firebaseUser.uid));
-        if (cancelled) return;
+    const unsub = onSnapshot(
+      doc(db, "memberIndex", firebaseUser.uid),
+      (idxSnap) => {
         if (idxSnap.exists()) {
           const idx = idxSnap.data() as { familyId: string; role: Role };
           setFamilyId(idx.familyId);
@@ -224,9 +303,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setFamilyId(null);
           setMyRole(null);
         }
-      } finally {
-        if (!cancelled) setResolvingFamily(false);
+        setResolvingFamily(false);
+      },
+      () => {
+        setFamilyId(null);
+        setMyRole(null);
+        setResolvingFamily(false);
       }
+    );
+    return () => {
+      unsub();
+    };
+  }, [firebaseUser]);
+
+  // 2b. 運営（開発者）フラグの確認（家族の有無とは独立）
+  useEffect(() => {
+    if (!firebaseUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsDeveloper(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const snap = await getDoc(doc(db, "developers", firebaseUser.uid));
+      if (!cancelled) setIsDeveloper(snap.exists());
     })();
     return () => {
       cancelled = true;
@@ -303,6 +403,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const hydrated = authResolved && !resolvingFamily;
 
+  // メールリンクでログインしたが、まだ家族(admin)アカウントとして登録されていない状態か
+  // （子供・共有者は合成メールで判別し、除外する）
+  const needsAdminProfile =
+    hydrated &&
+    !!firebaseUser &&
+    !familyId &&
+    !isDeveloper &&
+    !!firebaseUser.email &&
+    !firebaseUser.email.endsWith("@yattane-family.internal");
+
+  // コードでログインした直後、本人の名前が解決できたタイミングで「このデバイスで使ったコード」として記憶する
+  useEffect(() => {
+    if (!pendingCodeRef.current || !currentUser) return;
+    if (currentUser.role !== "owner" && currentUser.role !== "viewer") return;
+    const account: KnownCodeAccount = {
+      code: pendingCodeRef.current,
+      name: currentUser.name,
+      role: currentUser.role,
+    };
+    saveKnownCodeAccount(account);
+    // localStorage（外部ストア）への書き込みを状態に反映する
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKnownCodeAccounts(loadKnownCodeAccounts());
+    pendingCodeRef.current = null;
+  }, [currentUser]);
+
   const signUpAdmin = useCallback(async (email: string, password: string, name: string) => {
     setAuthError(null);
     try {
@@ -310,6 +436,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const uid = cred.user.uid;
       await setDoc(doc(db, "families", uid), {
         adminName: name,
+        adminEmail: email,
         familyDefaults: defaultFamilyDefaults(),
         createdAt: new Date().toISOString(),
       });
@@ -334,14 +461,58 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setAuthError(null);
     try {
       await signInWithEmailAndPassword(auth, codeToEmail(code), code);
+      pendingCodeRef.current = code;
     } catch {
       setAuthError("コードが正しくありません。もう一度確認してください。");
       throw new Error("invalid code");
     }
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    setAuthError(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (e) {
+      setAuthError(translateAuthError((e as { code?: string })?.code));
+      throw e;
+    }
+  }, []);
+
+  const sendLoginLink = useCallback(async (email: string) => {
+    setAuthError(null);
+    try {
+      await sendSignInLinkToEmail(auth, email, {
+        url: typeof window !== "undefined" ? window.location.origin : "",
+        handleCodeInApp: true,
+      });
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, email);
+      }
+    } catch (e) {
+      setAuthError(translateAuthError((e as { code?: string })?.code));
+      throw e;
+    }
+  }, []);
+
+  const finishAdminProfile = useCallback(async (name: string) => {
+    if (!firebaseUser) throw new Error("認証されていません");
+    const uid = firebaseUser.uid;
+    await setDoc(doc(db, "families", uid), {
+      adminName: name,
+      adminEmail: firebaseUser.email ?? "",
+      familyDefaults: defaultFamilyDefaults(),
+      createdAt: new Date().toISOString(),
+    });
+    await setDoc(doc(db, "memberIndex", uid), { familyId: uid, role: "admin" });
+  }, [firebaseUser]);
+
   const logout = useCallback(async () => {
     await signOut(auth);
+  }, []);
+
+  const forgetCodeAccount = useCallback((code: string) => {
+    removeKnownCodeAccount(code);
+    setKnownCodeAccounts(loadKnownCodeAccounts());
   }, []);
 
   const updateAdmin = useCallback(async (adminId: string, name: string) => {
@@ -535,11 +706,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     hydrated,
     currentUser,
     currentUserId: firebaseUser?.uid ?? null,
+    isDeveloper,
+    needsAdminProfile,
     authError,
     signUpAdmin,
     loginAdmin,
     loginWithCode,
+    sendLoginLink,
+    finishAdminProfile,
+    resetPassword,
     logout,
+    knownCodeAccounts,
+    forgetCodeAccount,
     updateAdmin,
     addChild,
     updateChild,

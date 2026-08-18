@@ -20,6 +20,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == familyId;
     }
 
+    // 運営（開発者）本人か。全家族の件数などの統計を見られる特別な閲覧専用ロール
+    function isDeveloper() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/developers/$(request.auth.uid));
+    }
+
     // uid -> familyId/role の索引。ログイン直後にどの家族に属するか解決するために使う
     match /memberIndex/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
@@ -31,15 +37,21 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // 運営(開発者)フラグ。本人のみ自分がdeveloperかどうかを確認できる（書き込みはコンソール/CLIから行う想定）
+    match /developers/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /families/{familyId} {
-      allow read: if isFamilyMember(familyId);
+      allow read: if isFamilyMember(familyId) || isDeveloper();
       allow create: if isSignedIn() && request.auth.uid == familyId;
       allow update: if isAdmin(familyId);
       allow delete: if false;
 
       // 子供（owner）・共有者（viewer）。追加/削除/名前変更は管理者のみ
       match /members/{memberId} {
-        allow read: if isFamilyMember(familyId);
+        allow read: if isFamilyMember(familyId) || isDeveloper();
         allow write: if isAdmin(familyId);
       }
 

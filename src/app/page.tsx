@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { ACHIEVEMENT_LABEL, buildAmountSchedule } from "@/lib/allocation";
 import { formatDateJP } from "@/lib/date";
+import { useState } from "react";
 import DailyReportBoard from "@/components/DailyReportBoard";
 import AuthGate from "@/components/AuthGate";
+import DevDashboard from "@/components/DevDashboard";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -14,14 +16,22 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function Home() {
-  const { hydrated, currentUser } = useStore();
+  const { hydrated, currentUser, isDeveloper, needsAdminProfile } = useStore();
 
   if (!hydrated) {
     return <p className="text-slate-400 text-sm">読み込み中...</p>;
   }
 
+  if (needsAdminProfile) {
+    return <CompleteAdminProfile />;
+  }
+
   if (!currentUser) {
     return <AuthGate />;
+  }
+
+  if (isDeveloper) {
+    return <DevDashboard />;
   }
 
   return (
@@ -54,6 +64,64 @@ export default function Home() {
           </p>
         </Link>
       </div>
+    </div>
+  );
+}
+
+function CompleteAdminProfile() {
+  const { finishAdminProfile, currentUserId } = useStore();
+  const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    try {
+      await finishAdminProfile(trimmed);
+    } catch {
+      setError("登録に失敗しました。もう一度お試しください。");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 max-w-sm">
+      <div>
+        <h1 className="text-xl font-bold">はじめまして！</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          メールでのログインが確認できました。最後にお名前を教えてください。
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {error}
+          </p>
+        )}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">お名前</label>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="例: 山田 花子"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            key={currentUserId}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {submitting ? "登録中..." : "はじめる"}
+        </button>
+      </form>
     </div>
   );
 }
