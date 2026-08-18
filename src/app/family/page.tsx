@@ -6,6 +6,56 @@ import type { AdminUser, ChildUser } from "@/lib/types";
 import { newCustomRange } from "@/lib/allocation";
 import { todayISO } from "@/lib/date";
 
+/** 新規作成直後にログインコードを目立たせて表示するバナー */
+function NewLoginCodeBanner({
+  name,
+  code,
+  onDismiss,
+}: {
+  name: string;
+  code: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="border-2 border-indigo-300 bg-indigo-50 rounded-lg p-4 flex items-center justify-between gap-3">
+      <p className="text-sm text-indigo-900">
+        <strong>{name}</strong>さんのログインコード:{" "}
+        <span className="font-mono text-lg tracking-widest font-bold">{code}</span>
+        <br />
+        <span className="text-xs text-indigo-700">
+          このコードは今しか表示されません。控えて本人に伝えてください（あとから「コードを表示」でも確認できます）。
+        </span>
+      </p>
+      <button
+        onClick={onDismiss}
+        className="text-xs text-indigo-500 hover:underline shrink-0"
+      >
+        閉じる
+      </button>
+    </div>
+  );
+}
+
+/** 既存メンバーのログインコードを必要なときだけ表示する */
+function LoginCodeReveal({ code }: { code: string }) {
+  const [shown, setShown] = useState(false);
+  return shown ? (
+    <span className="text-xs font-mono tracking-widest bg-slate-100 px-2 py-0.5 rounded">
+      {code}
+      <button
+        onClick={() => setShown(false)}
+        className="ml-2 text-slate-400 hover:underline font-sans"
+      >
+        隠す
+      </button>
+    </span>
+  ) : (
+    <button onClick={() => setShown(true)} className="text-xs text-indigo-600 hover:underline">
+      コードを表示
+    </button>
+  );
+}
+
 export default function FamilyPage() {
   const { hydrated, currentUser } = useStore();
 
@@ -44,23 +94,31 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
   const admin = data.admins.find((a) => a.id === adminId);
   const children = getChildrenOfAdmin(adminId);
   const [newChildName, setNewChildName] = useState("");
+  const [newlyCreated, setNewlyCreated] = useState<{ name: string; code: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleRemoveChild(child: ChildUser) {
+  async function handleRemoveChild(child: ChildUser) {
     if (
       !confirm(
         `「${child.name}」を削除しますか？この子供に紐づく課題・報告・共有者もすべて削除されます。`
       )
     )
       return;
-    removeChild(child.id);
+    await removeChild(child.id);
   }
 
-  function handleAddChild(e: React.FormEvent) {
+  async function handleAddChild(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     const name = newChildName.trim();
     if (!name) return;
-    addChild(name);
-    setNewChildName("");
+    try {
+      const created = await addChild(name);
+      setNewChildName("");
+      setNewlyCreated({ name, code: created.loginCode });
+    } catch {
+      setError("子供アカウントの作成に失敗しました。もう一度お試しください。");
+    }
   }
 
   return (
@@ -81,6 +139,15 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
 
       <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
         <h2 className="font-semibold">子供アカウント一覧</h2>
+
+        {newlyCreated && (
+          <NewLoginCodeBanner
+            name={newlyCreated.name}
+            code={newlyCreated.code}
+            onDismiss={() => setNewlyCreated(null)}
+          />
+        )}
+
         {children.length === 0 && (
           <p className="text-sm text-slate-400">まだ子供アカウントがありません。</p>
         )}
@@ -88,9 +155,9 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
           {children.map((c) => (
             <li key={c.id} className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
               <div className="flex items-center justify-between mb-2">
-                <div>
+                <div className="flex items-center gap-2">
                   <ChildNameEditor child={c} />
-                  <p className="text-xs text-slate-400">オーナー（子供）</p>
+                  <LoginCodeReveal code={c.loginCode} />
                 </div>
                 <button
                   onClick={() => handleRemoveChild(c)}
@@ -99,11 +166,13 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
                   子供を削除
                 </button>
               </div>
+              <p className="text-xs text-slate-400 mb-2">オーナー（子供）</p>
               <SharerManager childId={c.id} canEdit addedBy="admin" />
             </li>
           ))}
         </ul>
 
+        {error && <p className="text-sm text-red-600">{error}</p>}
         <form onSubmit={handleAddChild} className="flex gap-2 pt-2 border-t border-slate-100">
           <input
             value={newChildName}
@@ -429,17 +498,32 @@ function SharerManager({
   const { getSharersOfChild, addSharer, removeSharer } = useStore();
   const sharers = getSharersOfChild(childId);
   const [name, setName] = useState("");
+  const [newlyCreated, setNewlyCreated] = useState<{ name: string; code: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     const trimmed = name.trim();
     if (!trimmed) return;
-    addSharer(childId, trimmed, addedBy);
-    setName("");
+    try {
+      const created = await addSharer(childId, trimmed, addedBy);
+      setName("");
+      setNewlyCreated({ name: trimmed, code: created.loginCode });
+    } catch {
+      setError("共有者の作成に失敗しました。もう一度お試しください。");
+    }
   }
 
   return (
     <div className="space-y-2">
+      {newlyCreated && (
+        <NewLoginCodeBanner
+          name={newlyCreated.name}
+          code={newlyCreated.code}
+          onDismiss={() => setNewlyCreated(null)}
+        />
+      )}
       {sharers.length === 0 ? (
         <p className="text-xs text-slate-400">共有者はまだいません。</p>
       ) : (
@@ -449,9 +533,10 @@ function SharerManager({
               key={s.id}
               className="flex items-center justify-between text-sm bg-slate-50 rounded px-3 py-1.5"
             >
-              <span>
+              <span className="flex items-center gap-2">
                 {s.name}
-                <span className="text-xs text-slate-400 ml-2">共有者（閲覧・応援のみ）</span>
+                <span className="text-xs text-slate-400">共有者（閲覧・応援のみ）</span>
+                <LoginCodeReveal code={s.loginCode} />
               </span>
               {canEdit && (
                 <button
@@ -465,6 +550,7 @@ function SharerManager({
           ))}
         </ul>
       )}
+      {error && <p className="text-xs text-red-600">{error}</p>}
       {canEdit && (
         <form onSubmit={handleAdd} className="flex gap-2">
           <input

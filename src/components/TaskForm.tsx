@@ -74,7 +74,7 @@ export default function TaskForm({
     setCustomRanges((prev) => prev.filter((r) => r.id !== id));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!name.trim()) return setError("課題名を入力してください。");
@@ -84,7 +84,7 @@ export default function TaskForm({
     const pauseRule = { weeklyDays, customRanges };
 
     if (initial) {
-      updateTask(initial.id, {
+      await updateTask(initial.id, {
         name: name.trim(),
         totalAmount,
         unit,
@@ -97,7 +97,7 @@ export default function TaskForm({
       });
       onDone?.();
     } else {
-      const created = addTask({
+      const created = await addTask({
         childId,
         name: name.trim(),
         totalAmount,

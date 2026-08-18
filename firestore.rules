@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 家族(familyId)に属するメンバーか（管理者本人 or メンバーとして登録済み）
+    function isFamilyMember(familyId) {
+      return isSignedIn() && (
+        request.auth.uid == familyId ||
+        exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid))
+      );
+    }
+
+    // 管理者（親）本人か
+    function isAdmin(familyId) {
+      return isSignedIn() && request.auth.uid == familyId;
+    }
+
+    // uid -> familyId/role の索引。ログイン直後にどの家族に属するか解決するために使う
+    match /memberIndex/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && (
+        request.auth.uid == uid ||
+        request.auth.uid == request.resource.data.familyId
+      );
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.familyId;
+      allow update: if false;
+    }
+
+    match /families/{familyId} {
+      allow read: if isFamilyMember(familyId);
+      allow create: if isSignedIn() && request.auth.uid == familyId;
+      allow update: if isAdmin(familyId);
+      allow delete: if false;
+
+      // 子供（owner）・共有者（viewer）。追加/削除/名前変更は管理者のみ
+      match /members/{memberId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isAdmin(familyId);
+      }
+
+      // 課題。登録・編集・削除は管理者のみ（編集権限は管理者が持つ）
+      match /tasks/{taskId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isAdmin(familyId);
+      }
+
+      // 日次報告。管理者、またはその課題の担当（オーナー本人）のみ書き込み可
+      match /logs/{logId} {
+        allow read: if isFamilyMember(familyId);
+        allow create, update: if isAdmin(familyId) || (
+          isSignedIn() &&
+          request.auth.uid ==
+            get(/databases/$(database)/documents/families/$(familyId)/tasks/$(request.resource.data.taskId)).data.childId
+        );
+        allow delete: if isAdmin(familyId);
+      }
+    }
+  }
+}

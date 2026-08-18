@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { ACHIEVEMENT_LABEL, buildAmountSchedule } from "@/lib/allocation";
 import { formatDateJP } from "@/lib/date";
 import DailyReportBoard from "@/components/DailyReportBoard";
+import AuthGate from "@/components/AuthGate";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -13,40 +14,14 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function Home() {
-  const { hydrated, data, currentUser, login } = useStore();
+  const { hydrated, currentUser } = useStore();
 
   if (!hydrated) {
     return <p className="text-slate-400 text-sm">読み込み中...</p>;
   }
 
   if (!currentUser) {
-    const allUsers = [...data.admins, ...data.children, ...data.sharers];
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl font-bold">ログイン（デモ用アカウント選択）</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            本実装では認証基盤（Firebase / Supabase等）を利用予定です。まずは動作確認用に、
-            役割を選んでログインしてください。
-          </p>
-        </div>
-        <ul className="space-y-2">
-          {allUsers.map((u) => (
-            <li key={u.id}>
-              <button
-                onClick={() => login(u.id)}
-                className="w-full text-left border border-slate-200 rounded-lg px-4 py-3 bg-white hover:border-indigo-400 hover:bg-indigo-50 transition flex items-center justify-between"
-              >
-                <span className="font-medium">{u.name}</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {ROLE_LABEL[u.role]}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+    return <AuthGate />;
   }
 
   return (

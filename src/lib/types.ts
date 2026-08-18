@@ -12,18 +12,20 @@ export interface AdminUser {
 }
 
 export interface ChildUser {
-  id: string;
+  id: string; // Firebase Auth UID
   role: "owner";
   name: string;
-  adminId: string; // 紐づく親アカウント
+  adminId: string; // 紐づく親アカウント（= 家族ID = 親のUID）
+  loginCode: string; // ログイン用コード（パスワード代わり）
 }
 
 export interface SharerUser {
-  id: string;
+  id: string; // Firebase Auth UID
   role: "viewer";
   name: string;
   childId: string; // どの子供の報告を見られるか
   addedBy: "admin" | "owner"; // 追加した人（親からも子供からも追加可能）
+  loginCode: string; // ログイン用コード（パスワード代わり）
 }
 
 export type AppUser = AdminUser | ChildUser | SharerUser;

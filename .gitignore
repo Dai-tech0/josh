@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# lolipop deploy now
+.lolipop
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

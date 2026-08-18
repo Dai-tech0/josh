@@ -85,7 +85,7 @@ export default function BatchTaskForm({
     setEntries((prev) => (prev.length > 1 ? prev.filter((e) => e.key !== key) : prev));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -99,20 +99,22 @@ export default function BatchTaskForm({
       }
     }
 
-    for (const entry of entries) {
-      const preset = SUBJECT_PRESETS[entry.subject];
-      addTask({
-        childId,
-        name: preset ? entry.subject : entry.customName.trim(),
-        totalAmount: entry.totalAmount,
-        unit: preset ? preset.unit : entry.customUnit.trim() || "個",
-        type: preset ? preset.type : entry.customType,
-        priority: entry.priority,
-        startDate: entry.startDate,
-        endDate: entry.endDate,
-        pauseRule: { weeklyDays: entry.weeklyDays, customRanges: [] },
-      });
-    }
+    await Promise.all(
+      entries.map((entry) => {
+        const preset = SUBJECT_PRESETS[entry.subject];
+        return addTask({
+          childId,
+          name: preset ? entry.subject : entry.customName.trim(),
+          totalAmount: entry.totalAmount,
+          unit: preset ? preset.unit : entry.customUnit.trim() || "個",
+          type: preset ? preset.type : entry.customType,
+          priority: entry.priority,
+          startDate: entry.startDate,
+          endDate: entry.endDate,
+          pauseRule: { weeklyDays: entry.weeklyDays, customRanges: [] },
+        });
+      })
+    );
     onDone();
   }
 

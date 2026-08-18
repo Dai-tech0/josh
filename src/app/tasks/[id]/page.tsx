@@ -50,9 +50,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const canReport = isOwnerSelf;
   const logs = getLogsOfTask(task.id);
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!confirm(`「${task!.name}」を削除しますか？`)) return;
-    deleteTask(task!.id);
+    await deleteTask(task!.id);
     router.push("/tasks");
   }
 
