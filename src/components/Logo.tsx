@@ -2,13 +2,13 @@
 export default function Logo({ className = "" }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 172 48"
+      viewBox="0 0 130 48"
       className={className}
       role="img"
       aria-label="Yatta"
     >
       <path
-        d="M6 41 Q 66 48 134 39"
+        d="M6 41 Q 56 47 116 38"
         stroke="#FCA5A5"
         strokeWidth="4"
         strokeLinecap="round"
@@ -26,13 +26,13 @@ export default function Logo({ className = "" }: { className?: string }) {
         Yatta
       </text>
       <text
-        x="140"
+        x="78"
         y="30"
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         fontWeight="900"
         fontSize="30"
         fill="#DC2626"
-        transform="rotate(16 150 20)"
+        transform="rotate(16 88 20)"
       >
         !
       </text>
