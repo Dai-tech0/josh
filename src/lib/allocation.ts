@@ -198,6 +198,80 @@ export function buildCountSchedule(
   };
 }
 
+export interface ChildProgressSummary {
+  achievedThisWeek: number; // 直近7日のうち、その日の課題を達成できた日数
+  reportableThisWeek: number; // 直近7日のうち、実績が確定している日数
+  streak: number; // 今日（または直近）から遡って連続で達成できている日数
+  recentDays: { date: string; tier: AchievementTier }[]; // 直近の実績（最大5件、古い順）
+}
+
+/**
+ * 家族・権限画面で子供ごとの進捗をひと目で見せるためのサマリー。
+ * 総量課題（amount型）の日次実績を横断して集計する（個数課題は週単位のため対象外）。
+ * ある日の評価は、その日に稼働していた課題のうち最も悪い評価を採用する
+ * （1つでも未達成があれば「missed」扱い）。
+ */
+export function summarizeChildProgress(
+  tasks: HomeworkTask[],
+  logs: DailyLog[],
+  today: string = todayISO()
+): ChildProgressSummary {
+  const amountTasks = tasks.filter((t) => t.type === "amount");
+  const dateTiers = new Map<string, AchievementTier[]>();
+
+  for (const task of amountTasks) {
+    const schedule = buildAmountSchedule(task, logs, today);
+    for (const row of schedule.rows) {
+      if (row.isPause || row.tier === null || row.date > today) continue;
+      const arr = dateTiers.get(row.date) ?? [];
+      arr.push(row.tier);
+      dateTiers.set(row.date, arr);
+    }
+  }
+
+  function dayTier(date: string): AchievementTier | null {
+    const tiers = dateTiers.get(date);
+    if (!tiers || tiers.length === 0) return null;
+    if (tiers.includes("missed")) return "missed";
+    if (tiers.includes("exceeded")) return "exceeded";
+    return "met";
+  }
+
+  let achievedThisWeek = 0;
+  let reportableThisWeek = 0;
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(today, -i);
+    const tier = dayTier(date);
+    if (tier === null) continue;
+    reportableThisWeek++;
+    if (tier !== "missed") achievedThisWeek++;
+  }
+
+  let streak = 0;
+  let cursor = today;
+  for (let i = 0; i < 365; i++) {
+    const tier = dayTier(cursor);
+    if (tier === null) {
+      if (cursor === today) {
+        cursor = addDays(cursor, -1);
+        continue;
+      }
+      break;
+    }
+    if (tier === "missed") break;
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+
+  const recentDays = [...dateTiers.keys()]
+    .filter((d) => d <= today)
+    .sort()
+    .slice(-5)
+    .map((date) => ({ date, tier: dayTier(date)! }));
+
+  return { achievedThisWeek, reportableThisWeek, streak, recentDays };
+}
+
 export function priorityLabel(p: HomeworkTask["priority"]): string {
   return { high: "高", mid: "中", low: "低" }[p];
 }

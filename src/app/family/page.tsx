@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import type { AdminUser, ChildUser } from "@/lib/types";
-import { newCustomRange } from "@/lib/allocation";
-import { todayISO } from "@/lib/date";
+import { newCustomRange, summarizeChildProgress } from "@/lib/allocation";
+import { formatDateJP, todayISO } from "@/lib/date";
+import StampBadge from "@/components/StampBadge";
 
 /** 新規作成直後にログインコードを目立たせて表示するバナー */
 function NewLoginCodeBanner({
@@ -171,6 +172,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
                 </button>
               </div>
               <p className="text-xs text-slate-400 mb-2">オーナー（子供）</p>
+              <ChildProgressCard childId={c.id} />
               <SharerManager childId={c.id} canEdit addedBy="admin" />
             </li>
           ))}
@@ -233,6 +235,42 @@ function SharedCodeControl() {
         </button>
       )}
       {error && <span className="text-xs text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+/** 子供ごとの進捗サマリー（今週の達成率・連続達成日数・直近のスタンプ） */
+function ChildProgressCard({ childId }: { childId: string }) {
+  const { getTasksOfChild, getLogsOfTask } = useStore();
+  const tasks = getTasksOfChild(childId);
+  const logs = tasks.flatMap((t) => getLogsOfTask(t.id));
+  const summary = summarizeChildProgress(tasks, logs);
+
+  if (summary.reportableThisWeek === 0 && summary.recentDays.length === 0) return null;
+
+  return (
+    <div className="border border-slate-100 bg-slate-50 rounded-lg p-3 mb-2 space-y-2">
+      <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+        <span>
+          今週の達成:{" "}
+          <strong className="text-slate-800">
+            {summary.achievedThisWeek}/{summary.reportableThisWeek}日
+          </strong>
+        </span>
+        {summary.streak > 0 && (
+          <span className="text-rose-600 font-medium">🔥{summary.streak}日連続達成中</span>
+        )}
+      </div>
+      {summary.recentDays.length > 0 && (
+        <div className="flex items-end gap-1.5">
+          {summary.recentDays.map((d) => (
+            <div key={d.date} className="flex flex-col items-center gap-0.5">
+              <StampBadge tier={d.tier} size="sm" />
+              <span className="text-[10px] text-slate-400">{formatDateJP(d.date)}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
