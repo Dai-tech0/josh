@@ -93,8 +93,10 @@ export default function FeedbackPage() {
           <li key={post.id} className="border border-slate-200 rounded-lg bg-white p-4">
             <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
               <span>
-                {post.authorName}
-                <span className="ml-1">({ROLE_LABEL[post.authorRole] ?? post.authorRole})</span>
+                {(post.authorRole === "admin" || post.authorRole === "developer") && (
+                  <>{post.authorName} </>
+                )}
+                ({ROLE_LABEL[post.authorRole] ?? post.authorRole})
               </span>
               <span>{formatDateTime(post.createdAt)}</span>
             </div>
