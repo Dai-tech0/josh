@@ -222,6 +222,7 @@ interface StoreContextValue {
   updateChild: (childId: string, name: string) => Promise<void>;
   updateChildAge: (childId: string, age: number | undefined) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
+  developerDeleteFamily: (familyId: string) => Promise<void>;
   addSharer: (childId: string, name: string, addedBy: "admin" | "owner") => Promise<SharerUser>;
   removeSharer: (sharerId: string) => Promise<void>;
   // 課題・目標管理（セクション3）
@@ -690,6 +691,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [familyId]
   );
 
+  // 開発者専用: 家族（管理者アカウント）ごと削除する。サポート対応・不要アカウント整理のために使う
+  const developerDeleteFamily = useCallback(async (targetFamilyId: string) => {
+    const batch = writeBatch(db);
+    const [tasksSnap, logsSnap, membersSnap] = await Promise.all([
+      getDocs(collection(db, "families", targetFamilyId, "tasks")),
+      getDocs(collection(db, "families", targetFamilyId, "logs")),
+      getDocs(collection(db, "families", targetFamilyId, "members")),
+    ]);
+    tasksSnap.forEach((d) => batch.delete(d.ref));
+    logsSnap.forEach((d) => batch.delete(d.ref));
+    membersSnap.forEach((d) => {
+      batch.delete(d.ref);
+      batch.delete(doc(db, "memberIndex", d.id));
+    });
+    batch.delete(doc(db, "families", targetFamilyId));
+    batch.delete(doc(db, "memberIndex", targetFamilyId));
+    await batch.commit();
+  }, []);
+
   const addSharer = useCallback(
     async (childId: string, name: string, addedBy: "admin" | "owner"): Promise<SharerUser> => {
       if (!familyId) throw new Error("認証されていません");
@@ -862,6 +882,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateChild,
     updateChildAge,
     removeChild,
+    developerDeleteFamily,
     addSharer,
     removeSharer,
     addTask,

@@ -40,7 +40,7 @@ service cloud.firestore {
         request.auth.uid == uid ||
         request.auth.uid == request.resource.data.familyId
       );
-      allow delete: if isSignedIn() && request.auth.uid == resource.data.familyId;
+      allow delete: if isSignedIn() && (request.auth.uid == resource.data.familyId || isDeveloper());
       allow update: if false;
     }
 
@@ -61,19 +61,19 @@ service cloud.firestore {
     match /families/{familyId} {
       allow read: if isFamilyMember(familyId) || isDeveloper();
       allow create: if isSignedIn() && request.auth.uid == familyId;
-      allow update: if isAdmin(familyId);
-      allow delete: if false;
+      allow update: if isAdmin(familyId) || isDeveloper();
+      allow delete: if isDeveloper();
 
-      // 子供（owner）・共有者（viewer）。追加/削除/名前変更は管理者のみ
+      // 子供（owner）・共有者（viewer）。追加/削除/名前変更は管理者のみ（開発者はサポート対応・削除のために書き込み可）
       match /members/{memberId} {
         allow read: if isFamilyMember(familyId) || isDeveloper();
-        allow write: if isAdmin(familyId);
+        allow write: if isAdmin(familyId) || isDeveloper();
       }
 
-      // 課題。登録・編集・削除は管理者のみ（編集権限は管理者が持つ）
+      // 課題。登録・編集・削除は管理者のみ（開発者は家族削除時のみ書き込み可）
       match /tasks/{taskId} {
         allow read: if isFamilyMember(familyId);
-        allow write: if isAdmin(familyId);
+        allow write: if isAdmin(familyId) || isDeveloper();
       }
 
       // 日次報告。管理者、またはその課題の担当（オーナー本人）のみ書き込み可
@@ -84,7 +84,7 @@ service cloud.firestore {
           request.auth.uid ==
             get(/databases/$(database)/documents/families/$(familyId)/tasks/$(request.resource.data.taskId)).data.childId
         );
-        allow delete: if isAdmin(familyId);
+        allow delete: if isAdmin(familyId) || isDeveloper();
       }
     }
   }
