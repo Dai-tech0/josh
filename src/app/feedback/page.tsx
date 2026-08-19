@@ -21,7 +21,8 @@ function formatDateTime(iso: string): string {
 }
 
 export default function FeedbackPage() {
-  const { hydrated, currentUser, isDeveloper, feedbackPosts, postFeedback } = useStore();
+  const { hydrated, currentUser, currentUserId, isDeveloper, feedbackPosts, postFeedback } =
+    useStore();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ export default function FeedbackPage() {
     return <p className="text-slate-400 text-sm">読み込み中...</p>;
   }
 
-  if (!currentUser && !isDeveloper) {
+  if (!currentUser && !isDeveloper && !currentUserId) {
     return (
       <div className="border border-slate-200 rounded-lg p-6 bg-white text-sm text-slate-600">
         ログインが必要です。トップページからログインしてください。

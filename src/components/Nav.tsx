@@ -14,6 +14,7 @@ export default function Nav() {
   const {
     hydrated,
     currentUser,
+    currentUserId,
     isDeveloper,
     isSharedDevice,
     selectChild,
@@ -47,13 +48,20 @@ export default function Nav() {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-        <Link href="/" aria-label="Yatta">
-          <Logo className="h-7 w-auto" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" aria-label="Yatta">
+            <Logo className="h-7 w-auto" />
+          </Link>
+          {!currentUserId && (
+            <span className="text-xs text-slate-400 hidden sm:inline">
+              親子で宿題を管理するサービス
+            </span>
+          )}
+        </div>
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
           使い方ガイド
         </Link>
-        {(currentUser || isDeveloper || isSharedDevice) && (
+        {(currentUser || isDeveloper || isSharedDevice || currentUserId) && (
           <nav className="flex items-center gap-3 text-sm">
             {currentUser && (
               <>
