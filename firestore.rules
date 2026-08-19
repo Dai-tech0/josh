@@ -72,13 +72,13 @@ service cloud.firestore {
 
       // 課題。登録・編集・削除は管理者のみ（開発者は家族削除時のみ書き込み可）
       match /tasks/{taskId} {
-        allow read: if isFamilyMember(familyId);
+        allow read: if isFamilyMember(familyId) || isDeveloper();
         allow write: if isAdmin(familyId) || isDeveloper();
       }
 
       // 日次報告。管理者、またはその課題の担当（オーナー本人）のみ書き込み可
       match /logs/{logId} {
-        allow read: if isFamilyMember(familyId);
+        allow read: if isFamilyMember(familyId) || isDeveloper();
         allow create, update: if isAdmin(familyId) || isDeviceMember(familyId) || (
           isSignedIn() &&
           request.auth.uid ==
