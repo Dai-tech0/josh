@@ -53,9 +53,7 @@ export default function Nav() {
             <Logo className="h-7 w-auto" />
           </Link>
           {!currentUserId && (
-            <span className="text-xs text-slate-400 hidden sm:inline">
-              親子で宿題を管理するサービス
-            </span>
+            <span className="text-xs text-slate-400">親子で宿題を管理するサービス</span>
           )}
         </div>
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
