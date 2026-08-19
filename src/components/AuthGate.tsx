@@ -11,7 +11,7 @@ export default function AuthGate() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold">YATTANEにログイン</h1>
+        <h1 className="text-xl font-bold">Yattaにログイン</h1>
         <p className="text-sm text-slate-500 mt-1">
           保護者の方はメールアドレスでログイン・登録してください。子供・共有者の方は、保護者から発行されたログインコードでログインしてください。
         </p>

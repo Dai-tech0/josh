@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "YATTANE - 課題・タスク管理",
+  title: "Yatta - 課題・タスク管理",
   description: "子供と親、両方の負担を減らす課題・タスク管理ツール",
 };
 

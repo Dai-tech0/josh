@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/store";
+import Logo from "@/components/Logo";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -25,8 +26,8 @@ export default function Nav() {
     return (
       <header className="border-b border-slate-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="font-bold text-lg tracking-tight text-indigo-600">
-            YATTANE
+          <Link href="/" aria-label="Yatta">
+            <Logo className="h-7 w-auto" />
           </Link>
           <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
             使い方ガイド
@@ -46,8 +47,8 @@ export default function Nav() {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-        <Link href="/" className="font-bold text-lg tracking-tight text-indigo-600">
-          YATTANE
+        <Link href="/" aria-label="Yatta">
+          <Logo className="h-7 w-auto" />
         </Link>
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
           使い方ガイド

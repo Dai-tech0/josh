@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "使い方ガイド - YATTANE",
+  title: "使い方ガイド - Yatta",
 };
 
 export default function GuidePage() {
