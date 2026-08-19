@@ -26,6 +26,13 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/developers/$(request.auth.uid));
     }
 
+    // 共通コード（1台の端末を複数の子供で共有）でログインした本人か。家族の全員の分の報告を書き込める
+    function isDeviceMember(familyId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.role == "device";
+    }
+
     // uid -> familyId/role の索引。ログイン直後にどの家族に属するか解決するために使う
     match /memberIndex/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
@@ -72,7 +79,7 @@ service cloud.firestore {
       // 日次報告。管理者、またはその課題の担当（オーナー本人）のみ書き込み可
       match /logs/{logId} {
         allow read: if isFamilyMember(familyId);
-        allow create, update: if isAdmin(familyId) || (
+        allow create, update: if isAdmin(familyId) || isDeviceMember(familyId) || (
           isSignedIn() &&
           request.auth.uid ==
             get(/databases/$(database)/documents/families/$(familyId)/tasks/$(request.resource.data.taskId)).data.childId

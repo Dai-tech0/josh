@@ -10,8 +10,16 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function Nav() {
-  const { hydrated, currentUser, isDeveloper, logout, knownCodeAccounts, loginWithCode } =
-    useStore();
+  const {
+    hydrated,
+    currentUser,
+    isDeveloper,
+    isSharedDevice,
+    selectChild,
+    logout,
+    knownCodeAccounts,
+    loginWithCode,
+  } = useStore();
 
   if (!hydrated) {
     return (
@@ -28,7 +36,8 @@ export default function Nav() {
     );
   }
 
-  const isCodeAccount = currentUser?.role === "owner" || currentUser?.role === "viewer";
+  const isCodeAccount =
+    !isSharedDevice && (currentUser?.role === "owner" || currentUser?.role === "viewer");
   const currentCode = knownCodeAccounts.find((a) => a.name === currentUser?.name)?.code;
   const switchableAccounts = isCodeAccount
     ? knownCodeAccounts.filter((a) => a.code !== currentCode)
@@ -43,7 +52,7 @@ export default function Nav() {
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
           使い方ガイド
         </Link>
-        {(currentUser || isDeveloper) && (
+        {(currentUser || isDeveloper || isSharedDevice) && (
           <nav className="flex items-center gap-3 text-sm">
             {currentUser && (
               <>
@@ -67,8 +76,20 @@ export default function Nav() {
             {currentUser && (
               <span className="hidden sm:inline text-slate-500">
                 {currentUser.name}
-                <span className="ml-1 text-xs text-slate-400">({ROLE_LABEL[currentUser.role]})</span>
+                {!isSharedDevice && (
+                  <span className="ml-1 text-xs text-slate-400">
+                    ({ROLE_LABEL[currentUser.role]})
+                  </span>
+                )}
               </span>
+            )}
+            {isSharedDevice && currentUser && (
+              <button
+                onClick={() => selectChild(null)}
+                className="text-xs text-indigo-600 hover:underline whitespace-nowrap"
+              >
+                他の子供に切替
+              </button>
             )}
             {switchableAccounts.length > 0 && (
               <select

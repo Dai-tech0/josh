@@ -138,7 +138,10 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
       <FamilyDefaultsEditor adminId={adminId} />
 
       <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
-        <h2 className="font-semibold">子供アカウント一覧</h2>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h2 className="font-semibold">子供アカウント一覧</h2>
+          <SharedCodeControl />
+        </div>
 
         {newlyCreated && (
           <NewLoginCodeBanner
@@ -155,8 +158,9 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
           {children.map((c) => (
             <li key={c.id} className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <ChildNameEditor child={c} />
+                  <span className="text-xs text-slate-400">個別コード（個別に報告する場合）</span>
                   <LoginCodeReveal code={c.loginCode} />
                 </div>
                 <button
@@ -190,6 +194,45 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
       </section>
 
       <RolePermissionTable />
+    </div>
+  );
+}
+
+/** 複数の子供が1台の端末で報告するための共通コード。家族に1つだけ発行できる */
+function SharedCodeControl() {
+  const { sharedDeviceCode, getOrCreateSharedCode } = useStore();
+  const [issuing, setIssuing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleIssue() {
+    setError(null);
+    setIssuing(true);
+    try {
+      await getOrCreateSharedCode();
+    } catch {
+      setError("発行に失敗しました。もう一度お試しください。");
+    } finally {
+      setIssuing(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs text-slate-400">
+        共通コード（複数で1台の端末で報告する場合）
+      </span>
+      {sharedDeviceCode ? (
+        <LoginCodeReveal code={sharedDeviceCode} />
+      ) : (
+        <button
+          onClick={handleIssue}
+          disabled={issuing}
+          className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
+        >
+          {issuing ? "発行中..." : "発行する"}
+        </button>
+      )}
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }
@@ -272,6 +315,7 @@ const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
   const { getFamilyDefaults, updateFamilyDefaults } = useStore();
   const defaults = getFamilyDefaults(adminId);
+  const [open, setOpen] = useState(false);
   const [rangeLabel, setRangeLabel] = useState("");
   const [rangeStart, setRangeStart] = useState(todayISO());
   const [rangeEnd, setRangeEnd] = useState(todayISO());
@@ -317,12 +361,27 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
 
   return (
     <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
-      <div>
-        <h2 className="font-semibold">新しい課題の既定設定（設定の継承）</h2>
-        <p className="text-xs text-slate-500 mt-1">
-          ここで設定した期限・休止曜日・優先度は、新しく課題を登録するときの初期値になります。課題ごとに個別に上書きできます。
-        </p>
-      </div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div>
+          <h2 className="font-semibold">
+            {open ? "▼" : "▶"} 新しい課題の既定設定（設定の継承）
+          </h2>
+          {!open && (
+            <p className="text-xs text-slate-500 mt-1">
+              新しく課題を登録するときの初期値（期限・休止曜日・優先度）を設定します。
+            </p>
+          )}
+        </div>
+      </button>
+      {open && (
+        <>
+      <p className="text-xs text-slate-500 -mt-2">
+        ここで設定した期限・休止曜日・優先度は、新しく課題を登録するときの初期値になります。課題ごとに個別に上書きできます。
+      </p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">既定の開始日</label>
@@ -435,6 +494,8 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
           </button>
         </div>
       </div>
+        </>
+      )}
     </section>
   );
 }

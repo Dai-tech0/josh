@@ -168,11 +168,25 @@ function sanitizeForFirestore(patch: Record<string, unknown>): Record<string, un
 }
 
 interface MemberDoc {
-  role: "owner" | "viewer";
+  role: "owner" | "viewer" | "device";
   name: string;
   loginCode: string;
   childId?: string;
   addedBy?: "admin" | "owner";
+}
+
+// 1台の端末を複数の子供で共有するための「共通コード」。ログイン後、選んだ子供として振る舞う
+const SELECTED_CHILD_KEY = "yattane:selectedChildId";
+
+function loadSelectedChildId(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(SELECTED_CHILD_KEY);
+}
+
+function saveSelectedChildId(childId: string | null) {
+  if (typeof window === "undefined") return;
+  if (childId) window.localStorage.setItem(SELECTED_CHILD_KEY, childId);
+  else window.localStorage.removeItem(SELECTED_CHILD_KEY);
 }
 
 interface StoreContextValue {
@@ -183,6 +197,13 @@ interface StoreContextValue {
   authError: string | null;
   isDeveloper: boolean;
   needsAdminProfile: boolean;
+  // 共通コード（1台の端末を複数の子供で共有）
+  isSharedDevice: boolean;
+  needsChildSelection: boolean;
+  selectedChildId: string | null;
+  selectChild: (childId: string | null) => void;
+  sharedDeviceCode: string | null;
+  getOrCreateSharedCode: () => Promise<string>;
   // 認証
   signUpAdmin: (email: string, password: string, name: string) => Promise<void>;
   loginAdmin: (email: string, password: string) => Promise<void>;
@@ -237,9 +258,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
 
   const [familyId, setFamilyId] = useState<string | null>(null);
-  const [myRole, setMyRole] = useState<Role | null>(null);
+  const [myRole, setMyRole] = useState<Role | "device" | null>(null);
   const [resolvingFamily, setResolvingFamily] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
+
+  // 共通コード（1台の端末を複数の子供で共有）でログインしたとき、現在誰として操作しているか
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
   const [adminName, setAdminName] = useState("");
   const [familyDefaultsDoc, setFamilyDefaultsDoc] = useState<FamilyDefaults | null>(null);
@@ -256,6 +280,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // 初回マウント時に一度だけ localStorage（外部ストア）から読み込む
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setKnownCodeAccounts(loadKnownCodeAccounts());
+    setSelectedChildId(loadSelectedChildId());
   }, []);
 
   // 1. Firebase Authのログイン状態を監視
@@ -303,7 +328,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       doc(db, "memberIndex", firebaseUser.uid),
       (idxSnap) => {
         if (idxSnap.exists()) {
-          const idx = idxSnap.data() as { familyId: string; role: Role };
+          const idx = idxSnap.data() as { familyId: string; role: Role | "device" };
           setFamilyId(idx.familyId);
           setMyRole(idx.role);
         } else {
@@ -432,10 +457,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!firebaseUser || !familyId || !myRole) return null;
     if (myRole === "admin") return data.admins[0] ?? null;
     if (myRole === "owner") return data.children.find((c) => c.id === firebaseUser.uid) ?? null;
-    return data.sharers.find((s) => s.id === firebaseUser.uid) ?? null;
-  }, [firebaseUser, familyId, myRole, data]);
+    if (myRole === "viewer") return data.sharers.find((s) => s.id === firebaseUser.uid) ?? null;
+    if (myRole === "device") {
+      // 共通コードでは、選んだ子供として振る舞う（実際の認証UIDとは別に、当人のオーナー情報を返す）
+      if (!selectedChildId) return null;
+      return data.children.find((c) => c.id === selectedChildId) ?? null;
+    }
+    return null;
+  }, [firebaseUser, familyId, myRole, data, selectedChildId]);
+
+  const isSharedDevice = myRole === "device";
 
   const hydrated = authResolved && !resolvingFamily;
+
+  const needsChildSelection = hydrated && isSharedDevice && !selectedChildId;
+
+  const sharedDeviceCode = useMemo(
+    () => members.find((m) => m.role === "device")?.loginCode ?? null,
+    [members]
+  );
 
   // メールリンクでログインしたが、まだ家族(admin)アカウントとして登録されていない状態か
   // （子供・共有者は合成メールで判別し、除外する）
@@ -548,6 +588,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     removeKnownCodeAccount(code);
     setKnownCodeAccounts(loadKnownCodeAccounts());
   }, []);
+
+  const selectChild = useCallback((childId: string | null) => {
+    saveSelectedChildId(childId);
+    setSelectedChildId(childId);
+  }, []);
+
+  const getOrCreateSharedCode = useCallback(async (): Promise<string> => {
+    if (!familyId) throw new Error("認証されていません");
+    const existing = members.find((m) => m.role === "device");
+    if (existing) return existing.loginCode;
+    const { uid, code } = await createUniqueMemberAccount();
+    await setDoc(doc(db, "families", familyId, "members", uid), {
+      role: "device",
+      name: "共通アカウント",
+      loginCode: code,
+      createdAt: new Date().toISOString(),
+    });
+    await setDoc(doc(db, "memberIndex", uid), { familyId, role: "device" });
+    return code;
+  }, [familyId, members]);
 
   const updateAdmin = useCallback(async (adminId: string, name: string) => {
     await updateDoc(doc(db, "families", adminId), { adminName: name });
@@ -761,6 +821,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     currentUserId: firebaseUser?.uid ?? null,
     isDeveloper,
     needsAdminProfile,
+    isSharedDevice,
+    needsChildSelection,
+    selectedChildId,
+    selectChild,
+    sharedDeviceCode,
+    getOrCreateSharedCode,
     authError,
     signUpAdmin,
     loginAdmin,
