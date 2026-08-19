@@ -173,6 +173,7 @@ interface MemberDoc {
   loginCode: string;
   childId?: string;
   addedBy?: "admin" | "owner";
+  age?: number;
 }
 
 // 1台の端末を複数の子供で共有するための「共通コード」。ログイン後、選んだ子供として振る舞う
@@ -219,6 +220,7 @@ interface StoreContextValue {
   updateAdmin: (adminId: string, name: string) => Promise<void>;
   addChild: (name: string) => Promise<ChildUser>;
   updateChild: (childId: string, name: string) => Promise<void>;
+  updateChildAge: (childId: string, age: number | undefined) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
   addSharer: (childId: string, name: string, addedBy: "admin" | "owner") => Promise<SharerUser>;
   removeSharer: (sharerId: string) => Promise<void>;
@@ -432,7 +434,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const admins: AdminUser[] = familyId ? [{ id: familyId, role: "admin", name: adminName }] : [];
     const childrenList: ChildUser[] = members
       .filter((m) => m.role === "owner")
-      .map((m) => ({ id: m.id, role: "owner", name: m.name, adminId: familyId!, loginCode: m.loginCode }));
+      .map((m) => ({
+        id: m.id,
+        role: "owner",
+        name: m.name,
+        adminId: familyId!,
+        loginCode: m.loginCode,
+        age: m.age,
+      }));
     const sharersList: SharerUser[] = members
       .filter((m) => m.role === "viewer")
       .map((m) => ({
@@ -633,6 +642,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     async (childId: string, name: string) => {
       if (!familyId) return;
       await updateDoc(doc(db, "families", familyId, "members", childId), { name });
+    },
+    [familyId]
+  );
+
+  const updateChildAge = useCallback(
+    async (childId: string, age: number | undefined) => {
+      if (!familyId) return;
+      await updateDoc(
+        doc(db, "families", familyId, "members", childId),
+        sanitizeForFirestore({ age })
+      );
     },
     [familyId]
   );
@@ -840,6 +860,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateAdmin,
     addChild,
     updateChild,
+    updateChildAge,
     removeChild,
     addSharer,
     removeSharer,

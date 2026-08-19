@@ -17,6 +17,7 @@ export interface ChildUser {
   name: string;
   adminId: string; // 紐づく親アカウント（= 家族ID = 親のUID）
   loginCode: string; // ログイン用コード（パスワード代わり）
+  age?: number; // 年齢（将来、年齢に応じた広告を親アカウントのみに表示するために利用予定）
 }
 
 export interface SharerUser {
