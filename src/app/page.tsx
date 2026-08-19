@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { ACHIEVEMENT_LABEL, buildAmountSchedule } from "@/lib/allocation";
 import { formatDateJP } from "@/lib/date";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import DailyReportBoard from "@/components/DailyReportBoard";
 import AuthGate from "@/components/AuthGate";
 import DevDashboard from "@/components/DevDashboard";
@@ -27,7 +27,11 @@ export default function Home() {
   }
 
   if (!currentUser) {
-    return <AuthGate />;
+    return (
+      <Suspense fallback={<p className="text-slate-400 text-sm">読み込み中...</p>}>
+        <AuthGate />
+      </Suspense>
+    );
   }
 
   if (isDeveloper) {

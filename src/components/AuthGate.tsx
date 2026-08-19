@@ -1,12 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 
 type Tab = "adminLogin" | "adminSignup" | "emailLink" | "code";
 
+const TAB_PARAM_MAP: Record<string, Tab> = {
+  signup: "adminSignup",
+  email: "emailLink",
+  code: "code",
+};
+
 export default function AuthGate() {
   const [tab, setTab] = useState<Tab>("adminLogin");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    if (requested && TAB_PARAM_MAP[requested]) {
+      // URL（外部からのリンク）で指定されたタブに合わせる
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTab(TAB_PARAM_MAP[requested]);
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-6">
