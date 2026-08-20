@@ -161,6 +161,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <ChildNameEditor child={c} />
+                  <ChildAgeEditor child={c} />
                   <span className="text-xs text-slate-400">個別コード（個別に報告する場合）</span>
                   <LoginCodeReveal code={c.loginCode} />
                 </div>
@@ -279,6 +280,66 @@ function ChildNameEditor({ child }: { child: ChildUser }) {
   const { updateChild } = useStore();
   return (
     <InlineNameEditor initialName={child.name} onSave={(name) => updateChild(child.id, name)} />
+  );
+}
+
+/** 子供の年齢。将来、年齢に応じた広告を親アカウントにのみ表示するために使う予定 */
+function ChildAgeEditor({ child }: { child: ChildUser }) {
+  const { updateChildAge } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(child.age?.toString() ?? "");
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = value.trim();
+    if (trimmed === "") {
+      updateChildAge(child.id, undefined);
+      setEditing(false);
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 18) return;
+    updateChildAge(child.id, parsed);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <form onSubmit={handleSave} className="flex items-center gap-1">
+        <input
+          type="number"
+          min={0}
+          max={18}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          autoFocus
+          placeholder="年齢"
+          className="w-16 border border-slate-300 rounded px-2 py-1 text-xs"
+        />
+        <button type="submit" className="text-xs text-indigo-600 hover:underline">
+          保存
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setValue(child.age?.toString() ?? "");
+            setEditing(false);
+          }}
+          className="text-xs text-slate-400 hover:underline"
+        >
+          キャンセル
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <span className="text-xs text-slate-400">
+      {child.age !== undefined ? `${child.age}歳` : "年齢未設定"}
+      <button onClick={() => setEditing(true)} className="ml-1 text-indigo-600 hover:underline">
+        編集
+      </button>
+    </span>
   );
 }
 

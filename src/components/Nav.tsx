@@ -56,6 +56,17 @@ export default function Nav() {
             <span className="text-xs text-slate-400">親子で宿題を管理するサービス</span>
           )}
         </div>
+        {!currentUserId && (
+          <nav className="flex items-center gap-2 text-sm text-slate-500">
+            <Link href="/?tab=signup" className="hover:text-indigo-600">
+              保護者 新規登録
+            </Link>
+            <span className="text-slate-300">/</span>
+            <Link href="/?tab=code" className="hover:text-indigo-600">
+              子供コードでログイン
+            </Link>
+          </nav>
+        )}
         <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
           使い方ガイド
         </Link>

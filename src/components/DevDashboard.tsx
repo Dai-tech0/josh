@@ -84,7 +84,7 @@ export default function DevDashboard() {
       <div>
         <h1 className="text-xl font-bold">開発者ダッシュボード</h1>
         <p className="text-sm text-slate-500 mt-1">
-          登録されている全家族の状況を確認できます（閲覧専用）。
+          登録されている全家族の状況を確認できます。名前の編集・削除もここから行えます。
         </p>
       </div>
 
@@ -104,7 +104,13 @@ export default function DevDashboard() {
           ) : (
             <ul className="space-y-3">
               {stats.map((s) => (
-                <FamilyRow key={s.familyId} stat={s} />
+                <FamilyRow
+                  key={s.familyId}
+                  stat={s}
+                  onDeleted={() =>
+                    setStats((prev) => prev?.filter((x) => x.familyId !== s.familyId) ?? null)
+                  }
+                />
               ))}
             </ul>
           )}
@@ -114,10 +120,15 @@ export default function DevDashboard() {
   );
 }
 
-function FamilyRow({ stat }: { stat: FamilyStat }) {
-  const { resetPassword } = useStore();
+function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => void }) {
+  const { resetPassword, updateAdmin, developerDeleteFamily } = useStore();
   const [open, setOpen] = useState(false);
   const [resetStatus, setResetStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(stat.adminName);
+  const [adminName, setAdminName] = useState(stat.adminName);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function handleReset() {
     if (!stat.adminEmail) return;
@@ -130,6 +141,33 @@ function FamilyRow({ stat }: { stat: FamilyStat }) {
     }
   }
 
+  async function handleSaveName(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    await updateAdmin(stat.familyId, trimmed);
+    setAdminName(trimmed);
+    setEditingName(false);
+  }
+
+  async function handleDelete() {
+    if (
+      !confirm(
+        `「${adminName}」(${stat.adminEmail ?? "メール未記録"})の家族データをすべて削除しますか？子供・共有者・課題・報告もすべて削除され、元に戻せません。`
+      )
+    )
+      return;
+    setDeleteError(null);
+    setDeleting(true);
+    try {
+      await developerDeleteFamily(stat.familyId);
+      onDeleted();
+    } catch {
+      setDeleteError("削除に失敗しました。もう一度お試しください。");
+      setDeleting(false);
+    }
+  }
+
   const children = stat.members.filter((m) => m.role === "owner");
   const sharers = stat.members.filter((m) => m.role === "viewer");
 
@@ -137,33 +175,80 @@ function FamilyRow({ stat }: { stat: FamilyStat }) {
     <li className="border border-slate-200 rounded-lg bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="font-medium hover:text-indigo-600"
-          >
-            {stat.adminName} {open ? "▲" : "▼"}
-          </button>
+          {editingName ? (
+            <form onSubmit={handleSaveName} className="flex items-center gap-2">
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                autoFocus
+                className="border border-slate-300 rounded px-2 py-1 text-sm"
+              />
+              <button type="submit" className="text-xs text-indigo-600 hover:underline">
+                保存
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNameInput(adminName);
+                  setEditingName(false);
+                }}
+                className="text-xs text-slate-400 hover:underline"
+              >
+                キャンセル
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setOpen((o) => !o)}
+                className="font-medium hover:text-indigo-600"
+              >
+                {adminName} {open ? "▲" : "▼"}
+              </button>
+              <button
+                onClick={() => {
+                  setNameInput(adminName);
+                  setEditingName(true);
+                }}
+                className="text-xs text-indigo-600 hover:underline"
+              >
+                名前を編集
+              </button>
+            </div>
+          )}
           <p className="text-xs text-slate-400">
             {stat.adminEmail ?? "(メール未記録)"} ／ 登録日:{" "}
             {stat.createdAt ? stat.createdAt.slice(0, 10) : "-"} ／ 子供{children.length}人・
             共有者{sharers.length}人
           </p>
         </div>
-        {stat.adminEmail && (
-          <div className="text-right shrink-0">
+        <div className="text-right shrink-0 space-y-1">
+          {stat.adminEmail && (
+            <div>
+              <button
+                onClick={handleReset}
+                disabled={resetStatus === "sending"}
+                className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
+              >
+                {resetStatus === "sending" ? "送信中..." : "パスワード再設定メールを送る"}
+              </button>
+              {resetStatus === "sent" && (
+                <p className="text-xs text-emerald-600 mt-0.5">送信しました</p>
+              )}
+              {resetStatus === "error" && <p className="text-xs text-red-600 mt-0.5">送信失敗</p>}
+            </div>
+          )}
+          <div>
             <button
-              onClick={handleReset}
-              disabled={resetStatus === "sending"}
-              className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-xs text-red-500 hover:underline disabled:opacity-50"
             >
-              {resetStatus === "sending" ? "送信中..." : "パスワード再設定メールを送る"}
+              {deleting ? "削除中..." : "家族を削除"}
             </button>
-            {resetStatus === "sent" && (
-              <p className="text-xs text-emerald-600 mt-0.5">送信しました</p>
-            )}
-            {resetStatus === "error" && <p className="text-xs text-red-600 mt-0.5">送信失敗</p>}
+            {deleteError && <p className="text-xs text-red-600 mt-0.5">{deleteError}</p>}
           </div>
-        )}
+        </div>
       </div>
 
       {open && (

@@ -1,12 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 
 type Tab = "adminLogin" | "adminSignup" | "emailLink" | "code";
 
+const TAB_PARAM_MAP: Record<string, Tab> = {
+  signup: "adminSignup",
+  email: "emailLink",
+  code: "code",
+};
+
 export default function AuthGate() {
   const [tab, setTab] = useState<Tab>("adminLogin");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    if (requested && TAB_PARAM_MAP[requested]) {
+      // URL（外部からのリンク）で指定されたタブに合わせる
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTab(TAB_PARAM_MAP[requested]);
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-6">
@@ -21,9 +38,6 @@ export default function AuthGate() {
         <TabButton active={tab === "adminLogin"} onClick={() => setTab("adminLogin")}>
           保護者ログイン
         </TabButton>
-        <TabButton active={tab === "adminSignup"} onClick={() => setTab("adminSignup")}>
-          保護者 新規登録
-        </TabButton>
         <TabButton active={tab === "emailLink"} onClick={() => setTab("emailLink")}>
           メールでログイン
         </TabButton>
@@ -32,8 +46,13 @@ export default function AuthGate() {
         </TabButton>
       </div>
 
-      {tab === "adminLogin" && <AdminLoginForm />}
-      {tab === "adminSignup" && <AdminSignupForm onDone={() => setTab("adminLogin")} />}
+      {tab === "adminLogin" && <AdminLoginForm onSignup={() => setTab("adminSignup")} />}
+      {tab === "adminSignup" && (
+        <AdminSignupForm
+          onDone={() => setTab("adminLogin")}
+          onBack={() => setTab("adminLogin")}
+        />
+      )}
       {tab === "emailLink" && <EmailLinkForm />}
       {tab === "code" && <CodeLoginForm />}
     </div>
@@ -98,7 +117,7 @@ function TabButton({
   );
 }
 
-function AdminLoginForm() {
+function AdminLoginForm({ onSignup }: { onSignup: () => void }) {
   const { loginAdmin, authError } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -158,6 +177,16 @@ function AdminLoginForm() {
           パスワードをお忘れですか？
         </button>
       </div>
+      <p className="text-xs text-slate-500">
+        保護者の方ではじめてのご利用ですか？{" "}
+        <button
+          type="button"
+          onClick={onSignup}
+          className="text-indigo-600 hover:underline font-medium"
+        >
+          新規登録はコチラ
+        </button>
+      </p>
     </form>
   );
 }
@@ -234,7 +263,7 @@ function PasswordResetForm({ initialEmail, onBack }: { initialEmail: string; onB
   );
 }
 
-function AdminSignupForm({ onDone }: { onDone: () => void }) {
+function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
   const { signUpAdmin, authError } = useStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -287,13 +316,18 @@ function AdminSignupForm({ onDone }: { onDone: () => void }) {
         </label>
         <PasswordInput value={password} onChange={setPassword} required minLength={6} />
       </div>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
-      >
-        {submitting ? "登録中..." : "新規登録する"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {submitting ? "登録中..." : "新規登録する"}
+        </button>
+        <button type="button" onClick={onBack} className="text-xs text-slate-500 hover:underline">
+          ← ログインに戻る
+        </button>
+      </div>
     </form>
   );
 }

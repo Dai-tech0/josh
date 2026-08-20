@@ -173,6 +173,7 @@ interface MemberDoc {
   loginCode: string;
   childId?: string;
   addedBy?: "admin" | "owner";
+  age?: number;
 }
 
 // 1台の端末を複数の子供で共有するための「共通コード」。ログイン後、選んだ子供として振る舞う
@@ -219,7 +220,9 @@ interface StoreContextValue {
   updateAdmin: (adminId: string, name: string) => Promise<void>;
   addChild: (name: string) => Promise<ChildUser>;
   updateChild: (childId: string, name: string) => Promise<void>;
+  updateChildAge: (childId: string, age: number | undefined) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
+  developerDeleteFamily: (familyId: string) => Promise<void>;
   addSharer: (childId: string, name: string, addedBy: "admin" | "owner") => Promise<SharerUser>;
   removeSharer: (sharerId: string) => Promise<void>;
   // 課題・目標管理（セクション3）
@@ -432,7 +435,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const admins: AdminUser[] = familyId ? [{ id: familyId, role: "admin", name: adminName }] : [];
     const childrenList: ChildUser[] = members
       .filter((m) => m.role === "owner")
-      .map((m) => ({ id: m.id, role: "owner", name: m.name, adminId: familyId!, loginCode: m.loginCode }));
+      .map((m) => ({
+        id: m.id,
+        role: "owner",
+        name: m.name,
+        adminId: familyId!,
+        loginCode: m.loginCode,
+        age: m.age,
+      }));
     const sharersList: SharerUser[] = members
       .filter((m) => m.role === "viewer")
       .map((m) => ({
@@ -637,6 +647,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [familyId]
   );
 
+  const updateChildAge = useCallback(
+    async (childId: string, age: number | undefined) => {
+      if (!familyId) return;
+      await updateDoc(
+        doc(db, "families", familyId, "members", childId),
+        sanitizeForFirestore({ age })
+      );
+    },
+    [familyId]
+  );
+
   const removeChild = useCallback(
     async (childId: string) => {
       if (!familyId) return;
@@ -669,6 +690,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [familyId]
   );
+
+  // 開発者専用: 家族（管理者アカウント）ごと削除する。サポート対応・不要アカウント整理のために使う
+  const developerDeleteFamily = useCallback(async (targetFamilyId: string) => {
+    const batch = writeBatch(db);
+    const [tasksSnap, logsSnap, membersSnap] = await Promise.all([
+      getDocs(collection(db, "families", targetFamilyId, "tasks")),
+      getDocs(collection(db, "families", targetFamilyId, "logs")),
+      getDocs(collection(db, "families", targetFamilyId, "members")),
+    ]);
+    tasksSnap.forEach((d) => batch.delete(d.ref));
+    logsSnap.forEach((d) => batch.delete(d.ref));
+    membersSnap.forEach((d) => {
+      batch.delete(d.ref);
+      batch.delete(doc(db, "memberIndex", d.id));
+    });
+    batch.delete(doc(db, "families", targetFamilyId));
+    batch.delete(doc(db, "memberIndex", targetFamilyId));
+    await batch.commit();
+  }, []);
 
   const addSharer = useCallback(
     async (childId: string, name: string, addedBy: "admin" | "owner"): Promise<SharerUser> => {
@@ -840,7 +880,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateAdmin,
     addChild,
     updateChild,
+    updateChildAge,
     removeChild,
+    developerDeleteFamily,
     addSharer,
     removeSharer,
     addTask,
