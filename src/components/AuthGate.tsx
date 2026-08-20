@@ -40,6 +40,41 @@ export default function AuthGate() {
   );
 }
 
+function PasswordInput({
+  value,
+  onChange,
+  required,
+  minLength,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  minLength?: number;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        type={visible ? "text" : "password"}
+        required={required}
+        minLength={minLength}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border border-slate-300 rounded px-3 py-2 pr-14 text-sm"
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        tabIndex={-1}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-indigo-600"
+      >
+        {visible ? "隠す" : "表示"}
+      </button>
+    </div>
+  );
+}
+
 function TabButton({
   active,
   onClick,
@@ -105,13 +140,7 @@ function AdminLoginForm() {
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500 mb-1">パスワード</label>
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
-        />
+        <PasswordInput value={password} onChange={setPassword} required />
       </div>
       <div className="flex items-center gap-3">
         <button
@@ -256,14 +285,7 @@ function AdminSignupForm({ onDone }: { onDone: () => void }) {
         <label className="block text-xs font-medium text-slate-500 mb-1">
           パスワード（6文字以上）
         </label>
-        <input
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
-        />
+        <PasswordInput value={password} onChange={setPassword} required minLength={6} />
       </div>
       <button
         type="submit"
