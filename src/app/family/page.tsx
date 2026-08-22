@@ -40,9 +40,27 @@ function NewLoginCodeBanner({
 /** 既存メンバーのログインコードを必要なときだけ表示する */
 function LoginCodeReveal({ code }: { code: string }) {
   const [shown, setShown] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // クリップボードが使えない環境では何もしない
+    }
+  }
+
   return shown ? (
     <span className="text-xs font-mono tracking-widest bg-slate-100 px-2 py-0.5 rounded">
       {code}
+      <button
+        onClick={handleCopy}
+        className="ml-2 text-indigo-600 hover:underline font-sans"
+      >
+        {copied ? "コピーしました" : "コピー"}
+      </button>
       <button
         onClick={() => setShown(false)}
         className="ml-2 text-slate-400 hover:underline font-sans"

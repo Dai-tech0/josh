@@ -66,12 +66,12 @@ function AdminTasksView({
         <h1 className="text-xl font-bold">課題・目標管理</h1>
         <p className="text-sm text-slate-500 mt-1">課題の登録・編集は管理者（親）が行います。</p>
       </div>
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-3 flex-wrap">
         {childrenList.map((c) => (
           <button
             key={c.id}
             onClick={() => setSelectedId(c.id)}
-            className={`px-3 py-1.5 rounded-full text-sm border transition ${
+            className={`px-5 py-2.5 rounded-full text-base font-medium border-2 transition ${
               selected.id === c.id
                 ? "bg-indigo-600 text-white border-indigo-600"
                 : "bg-white text-slate-600 border-slate-300 hover:border-indigo-400"

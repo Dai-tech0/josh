@@ -16,12 +16,12 @@ export default function ChildPicker() {
           まだ子供アカウントがありません。保護者に追加してもらってください。
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {data.children.map((c) => (
             <button
               key={c.id}
               onClick={() => selectChild(c.id)}
-              className="w-full text-left border border-slate-200 rounded-lg bg-white px-4 py-3 hover:border-indigo-400 font-medium"
+              className="w-full text-left border-2 border-slate-200 rounded-xl bg-white px-5 py-4 hover:border-indigo-400 text-lg font-semibold"
             >
               {c.name}
             </button>
