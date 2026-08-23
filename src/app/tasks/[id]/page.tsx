@@ -9,6 +9,7 @@ import QuotaCheckboxReport from "@/components/QuotaCheckboxReport";
 import StampBadge from "@/components/StampBadge";
 import { PRIORITY_STYLE, buildAmountSchedule, buildCountSchedule, priorityLabel } from "@/lib/allocation";
 import { formatDateJP, todayISO } from "@/lib/date";
+import FuriganaText from "@/components/FuriganaText";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -60,7 +61,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     <div className="space-y-6">
       <div>
         <Link href="/tasks" className="text-xs text-indigo-600 hover:underline">
-          ← 課題一覧に戻る
+          ← <FuriganaText text="課題一覧に戻る" />
         </Link>
       </div>
 
@@ -76,7 +77,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}`}>
-                    優先度: {priorityLabel(task.priority)}
+                    <FuriganaText text="優先度" />: {priorityLabel(task.priority)}
                   </span>
                   <span className="text-xs text-slate-500">
                     {task.type === "amount" ? "総量型（日割り）" : "個数型（週割り）"}
@@ -151,10 +152,10 @@ function AmountView({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="残り" value={`${schedule.remainingAmount}${task.unit}`} />
-        <Stat label="残り稼働日" value={`${schedule.remainingWorkdays}日`} />
+        <Stat label={<FuriganaText text="残り" />} value={`${schedule.remainingAmount}${task.unit}`} />
+        <Stat label={<FuriganaText text="残り稼働日" />} value={`${schedule.remainingWorkdays}日`} />
         <Stat
-          label="今日のノルマ"
+          label={<FuriganaText text="今日のノルマ" />}
           value={schedule.todaysQuota !== null ? `${schedule.todaysQuota}${task.unit}` : "休止日"}
           highlight
         />
@@ -169,7 +170,9 @@ function AmountView({
       {canReport && (
         <div className="border border-slate-200 rounded-lg bg-white p-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">報告する日</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              <FuriganaText text="報告する日" />
+            </label>
             <select
               value={reportDate}
               onChange={(e) => setReportDate(e.target.value)}
@@ -211,10 +214,16 @@ function AmountView({
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs">
             <tr>
-              <th className="text-left px-3 py-2 font-medium">日付</th>
+              <th className="text-left px-3 py-2 font-medium">
+                <FuriganaText text="日付" />
+              </th>
               <th className="text-right px-3 py-2 font-medium">ノルマ</th>
-              <th className="text-right px-3 py-2 font-medium">実績</th>
-              <th className="text-right px-3 py-2 font-medium">状態</th>
+              <th className="text-right px-3 py-2 font-medium">
+                <FuriganaText text="実績" />
+              </th>
+              <th className="text-right px-3 py-2 font-medium">
+                <FuriganaText text="状態" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -280,10 +289,10 @@ function CountView({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="残り" value={`${schedule.remainingCount}${task.unit}`} />
-        <Stat label="残り週数" value={`${schedule.remainingWeeks}週`} />
+        <Stat label={<FuriganaText text="残り" />} value={`${schedule.remainingCount}${task.unit}`} />
+        <Stat label={<FuriganaText text="残り週数" />} value={`${schedule.remainingWeeks}週`} />
         <Stat
-          label="今週のノルマ"
+          label={<FuriganaText text="今週のノルマ" />}
           value={schedule.thisWeekQuota !== null ? `${schedule.thisWeekQuota}${task.unit}` : "-"}
           highlight
         />
@@ -295,7 +304,9 @@ function CountView({
           className="border border-slate-200 rounded-lg bg-white p-4 flex flex-wrap items-end gap-3"
         >
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">実施した日</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              <FuriganaText text="実施した日" />
+            </label>
             <input
               type="date"
               value={reportDate}
@@ -307,7 +318,7 @@ function CountView({
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">
-              完了した数（{task.unit}）
+              <FuriganaText text="完了した数" />（{task.unit}）
             </label>
             <input
               type="number"
@@ -321,7 +332,7 @@ function CountView({
             type="submit"
             className="bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700"
           >
-            報告する
+            <FuriganaText text="報告する" />
           </button>
         </form>
       )}
@@ -331,8 +342,12 @@ function CountView({
           <thead className="bg-slate-50 text-slate-500 text-xs">
             <tr>
               <th className="text-left px-3 py-2 font-medium">週</th>
-              <th className="text-right px-3 py-2 font-medium">ノルマ</th>
-              <th className="text-right px-3 py-2 font-medium">実績</th>
+              <th className="text-right px-3 py-2 font-medium">
+                <FuriganaText text="ノルマ" />
+              </th>
+              <th className="text-right px-3 py-2 font-medium">
+                <FuriganaText text="実績" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -385,7 +400,7 @@ function PauseDayInlineForm({
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div>
         <label className="block text-xs text-slate-500 mb-1">
-          休止日です。やりたい場合だけ記録できます（{unit}）
+          <FuriganaText text="休止日です。やりたい場合だけ記録できます" />（{unit}）
         </label>
         <input
           type="number"
@@ -402,14 +417,26 @@ function PauseDayInlineForm({
         type="submit"
         className="bg-slate-600 text-white text-sm px-4 py-1.5 rounded hover:bg-slate-700"
       >
-        記録する
+        <FuriganaText text="記録する" />
       </button>
-      {saved && <span className="text-xs text-indigo-500">自主学習を記録しました</span>}
+      {saved && (
+        <span className="text-xs text-indigo-500">
+          <FuriganaText text="自主学習を記録しました" />
+        </span>
+      )}
     </form>
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: React.ReactNode;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div
       className={`border rounded-lg p-3 text-center ${

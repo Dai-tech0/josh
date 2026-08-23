@@ -6,6 +6,7 @@ import type { AdminUser, ChildUser } from "@/lib/types";
 import { newCustomRange, summarizeChildProgress } from "@/lib/allocation";
 import { formatDateJP, todayISO } from "@/lib/date";
 import StampBadge from "@/components/StampBadge";
+import FuriganaText from "@/components/FuriganaText";
 
 /** 新規作成直後にログインコードを目立たせて表示するバナー */
 function NewLoginCodeBanner({
@@ -97,7 +98,13 @@ function NeedLogin() {
   );
 }
 
-function SectionHeading({ title, desc }: { title: string; desc?: string }) {
+function SectionHeading({
+  title,
+  desc,
+}: {
+  title: React.ReactNode;
+  desc?: React.ReactNode;
+}) {
   return (
     <div>
       <h1 className="text-xl font-bold">{title}</h1>
@@ -644,11 +651,13 @@ function OwnerFamilyView({ child }: { child: ChildUser }) {
   return (
     <div className="space-y-8">
       <SectionHeading
-        title="家族・権限管理"
-        desc="あなたを応援してくれる共有者を追加・削除できます。目標や課題の編集は管理者（親）が行います。"
+        title={<FuriganaText text="家族・権限管理" />}
+        desc={<FuriganaText text="あなたを応援してくれる共有者を追加・削除できます。目標や課題の編集は管理者（親）が行います。" />}
       />
       <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
-        <h2 className="font-semibold">{child.name}さんの共有者</h2>
+        <h2 className="font-semibold">
+          {child.name}さん<FuriganaText text="の共有者" />
+        </h2>
         <SharerManager childId={child.id} canEdit addedBy="owner" />
       </section>
       <RolePermissionTable />
