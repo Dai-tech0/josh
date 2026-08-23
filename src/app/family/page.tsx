@@ -180,6 +180,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <ChildNameEditor child={c} />
                   <ChildAgeEditor child={c} />
+                  <ChildFuriganaToggle child={c} />
                   <span className="text-xs text-slate-500">個別コード（個別に報告する場合）</span>
                   <LoginCodeReveal code={c.loginCode} />
                 </div>
@@ -298,6 +299,26 @@ function ChildNameEditor({ child }: { child: ChildUser }) {
   const { updateChild } = useStore();
   return (
     <InlineNameEditor initialName={child.name} onSave={(name) => updateChild(child.id, name)} />
+  );
+}
+
+/** 子供向け画面の漢字にふりがなを表示するかどうか（親が子供ごとに設定する） */
+function ChildFuriganaToggle({ child }: { child: ChildUser }) {
+  const { updateChildFurigana } = useStore();
+  const enabled = !!child.furiganaEnabled;
+
+  return (
+    <button
+      type="button"
+      onClick={() => updateChildFurigana(child.id, !enabled)}
+      className={`text-xs px-2 py-1 rounded-full border transition ${
+        enabled
+          ? "bg-indigo-600 text-white border-indigo-600"
+          : "bg-white text-slate-500 border-slate-300 hover:border-indigo-400"
+      }`}
+    >
+      ふりがな{enabled ? "ON" : "OFF"}
+    </button>
   );
 }
 

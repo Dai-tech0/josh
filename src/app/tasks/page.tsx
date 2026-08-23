@@ -15,6 +15,7 @@ import { formatDateJP } from "@/lib/date";
 import BatchTaskForm from "@/components/BatchTaskForm";
 import TaskForm from "@/components/TaskForm";
 import ProgressCalendar from "@/components/ProgressCalendar";
+import FuriganaText from "@/components/FuriganaText";
 
 export default function TasksPage() {
   const { hydrated, currentUser, data, getChildrenOfAdmin } = useStore();
@@ -113,13 +114,15 @@ function ChildTasksBoard({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">{childName}さんの課題一覧（優先度順）</h2>
+        <h2 className="font-semibold">
+          {childName}さん<FuriganaText text="の課題一覧（優先度順）" />
+        </h2>
         {canEdit && (
           <button
             onClick={() => setShowForm((s) => !s)}
             className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700"
           >
-            {showForm ? "閉じる" : "＋ 課題を登録"}
+            {showForm ? "閉じる" : <FuriganaText text="＋ 課題を登録" />}
           </button>
         )}
       </div>
@@ -206,7 +209,7 @@ function TaskCard({
         <div>
           <div className="flex items-center gap-2">
             <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}`}>
-              優先度: {priorityLabel(task.priority)}
+              <FuriganaText text="優先度" />: {priorityLabel(task.priority)}
             </span>
             <span className="text-xs text-slate-500">
               {task.type === "amount" ? "総量型（日割り）" : "個数型（週割り）"}
@@ -226,7 +229,7 @@ function TaskCard({
             href={`/tasks/${task.id}`}
             className="text-xs text-indigo-600 hover:underline whitespace-nowrap"
           >
-            {canReport ? "報告する" : "詳細を見る"}
+            <FuriganaText text={canReport ? "報告する" : "詳細を見る"} />
           </Link>
           {canEdit && (
             <>

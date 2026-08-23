@@ -174,6 +174,7 @@ interface MemberDoc {
   childId?: string;
   addedBy?: "admin" | "owner";
   age?: number;
+  furiganaEnabled?: boolean;
 }
 
 // 1台の端末を複数の子供で共有するための「共通コード」。ログイン後、選んだ子供として振る舞う
@@ -221,6 +222,7 @@ interface StoreContextValue {
   addChild: (name: string) => Promise<ChildUser>;
   updateChild: (childId: string, name: string) => Promise<void>;
   updateChildAge: (childId: string, age: number | undefined) => Promise<void>;
+  updateChildFurigana: (childId: string, enabled: boolean) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
   developerDeleteFamily: (familyId: string) => Promise<void>;
   addSharer: (childId: string, name: string, addedBy: "admin" | "owner") => Promise<SharerUser>;
@@ -442,6 +444,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         adminId: familyId!,
         loginCode: m.loginCode,
         age: m.age,
+        furiganaEnabled: m.furiganaEnabled,
       }));
     const sharersList: SharerUser[] = members
       .filter((m) => m.role === "viewer")
@@ -654,6 +657,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         doc(db, "families", familyId, "members", childId),
         sanitizeForFirestore({ age })
       );
+    },
+    [familyId]
+  );
+
+  const updateChildFurigana = useCallback(
+    async (childId: string, enabled: boolean) => {
+      if (!familyId) return;
+      await updateDoc(doc(db, "families", familyId, "members", childId), {
+        furiganaEnabled: enabled,
+      });
     },
     [familyId]
   );
@@ -881,6 +894,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addChild,
     updateChild,
     updateChildAge,
+    updateChildFurigana,
     removeChild,
     developerDeleteFamily,
     addSharer,

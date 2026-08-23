@@ -15,6 +15,7 @@ import { formatDateJP, todayISO } from "@/lib/date";
 import type { DailyLog, HomeworkTask } from "@/lib/types";
 import QuotaCheckboxReport from "./QuotaCheckboxReport";
 import StampBadge from "./StampBadge";
+import FuriganaText from "./FuriganaText";
 
 /**
  * 子供のホーム画面向け: 今日の課題を優先度順に並べ、その場で実績を登録できるボード。
@@ -28,14 +29,17 @@ export default function DailyReportBoard({ childId }: { childId: string }) {
   if (tasks.length === 0) {
     return (
       <div className="border border-slate-200 rounded-lg bg-white p-5 text-sm text-slate-500">
-        まだ課題が登録されていません。管理者（親）に課題を登録してもらいましょう。
+        <FuriganaText text="まだ課題が登録されていません。管理者（親）に課題を登録してもらいましょう。" />
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <h2 className="font-semibold">{formatDateJP(todayISO())}の実績を登録</h2>
+      <h2 className="font-semibold">
+        {formatDateJP(todayISO())}
+        <FuriganaText text="の実績を登録" />
+      </h2>
       {tasks.map((task) => (
         <TaskReportRow key={task.id} task={task} logs={getLogsOfTask(task.id)} />
       ))}
@@ -48,7 +52,7 @@ function TaskReportRow({ task, logs }: { task: HomeworkTask; logs: DailyLog[] })
     <div className="border border-slate-200 rounded-lg bg-white p-4">
       <div className="flex items-center gap-2 mb-2">
         <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}`}>
-          優先度: {priorityLabel(task.priority)}
+          <FuriganaText text="優先度" />: {priorityLabel(task.priority)}
         </span>
         <Link href={`/tasks/${task.id}`} className="font-medium hover:text-indigo-600">
           {task.name}
@@ -67,7 +71,11 @@ function AmountReportForm({ task, logs }: { task: HomeworkTask; logs: DailyLog[]
   const [justSubmitted, setJustSubmitted] = useState<number | null>(null);
 
   if (!todayRow) {
-    return <p className="text-xs text-slate-500">今日はこの課題の期間外です。</p>;
+    return (
+      <p className="text-xs text-slate-500">
+        <FuriganaText text="今日はこの課題の期間外です。" />
+      </p>
+    );
   }
   if (todayRow.isPause) {
     return (
@@ -118,7 +126,9 @@ function RecentStamps({ schedule }: { schedule: AmountSchedule }) {
 
   return (
     <div className="pt-1">
-      <p className="text-xs text-slate-500 mb-1">これまでの記録</p>
+      <p className="text-xs text-slate-500 mb-1">
+        <FuriganaText text="これまでの記録" />
+      </p>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {recent.map((r) => (
           <div key={r.date} className="flex flex-col items-center shrink-0">
@@ -149,7 +159,7 @@ function CountReportForm({ task, logs }: { task: HomeworkTask; logs: DailyLog[] 
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div>
         <label className="block text-xs text-slate-500 mb-1">
-          今週のノルマ: {schedule.thisWeekQuota ?? 0}
+          <FuriganaText text="今週のノルマ" />: {schedule.thisWeekQuota ?? 0}
           {task.unit}
         </label>
         <input
@@ -167,9 +177,13 @@ function CountReportForm({ task, logs }: { task: HomeworkTask; logs: DailyLog[] 
         type="submit"
         className="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded hover:bg-indigo-700"
       >
-        報告する
+        <FuriganaText text="報告する" />
       </button>
-      {saved && <span className="text-xs text-emerald-600">報告しました</span>}
+      {saved && (
+        <span className="text-xs text-emerald-600">
+          <FuriganaText text="報告しました" />
+        </span>
+      )}
     </form>
   );
 }
@@ -199,7 +213,7 @@ function PauseDayQuickForm({
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div>
         <label className="block text-xs text-slate-500 mb-1">
-          今日は休止日です。やりたい場合だけ記録できます（{unit}）
+          <FuriganaText text="今日は休止日です。やりたい場合だけ記録できます" />（{unit}）
         </label>
         <input
           type="number"
@@ -216,9 +230,13 @@ function PauseDayQuickForm({
         type="submit"
         className="bg-slate-600 text-white text-sm px-4 py-1.5 rounded hover:bg-slate-700"
       >
-        記録する
+        <FuriganaText text="記録する" />
       </button>
-      {saved && <span className="text-xs text-indigo-500">自主学習を記録しました</span>}
+      {saved && (
+        <span className="text-xs text-indigo-500">
+          <FuriganaText text="自主学習を記録しました" />
+        </span>
+      )}
     </form>
   );
 }

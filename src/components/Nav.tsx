@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import Logo from "@/components/Logo";
+import FuriganaText from "@/components/FuriganaText";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -75,10 +76,10 @@ export default function Nav() {
             {currentUser && (
               <>
                 <Link href="/family" className="text-slate-600 hover:text-indigo-600">
-                  家族・権限
+                  <FuriganaText text="家族・権限" />
                 </Link>
                 <Link href="/tasks" className="text-slate-600 hover:text-indigo-600">
-                  課題・目標
+                  <FuriganaText text="課題・目標" />
                 </Link>
               </>
             )}

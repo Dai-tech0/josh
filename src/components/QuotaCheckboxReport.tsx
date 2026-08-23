@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FuriganaText from "./FuriganaText";
 
 /**
  * チェックボックス式の実績報告UI。
@@ -46,8 +47,8 @@ export default function QuotaCheckboxReport({
               }}
               className="w-5 h-5 accent-indigo-600"
             />
-            今日のノルマ（{plannedAmount}
-            {unit}）を達成した
+            <FuriganaText text="今日のノルマ" />（{plannedAmount}
+            {unit}）<FuriganaText text="を達成した" />
           </label>
           <button
             type="button"
@@ -59,13 +60,14 @@ export default function QuotaCheckboxReport({
             className="text-xs text-indigo-600 hover:underline"
           >
             {plannedAmount}
-            {unit}以上できた場合はこちら
+            {unit}
+            <FuriganaText text="以上できた場合はこちら" />
           </button>
         </div>
       ) : (
         <div className="flex items-center gap-3 flex-wrap">
           <label className="text-sm text-slate-600">
-            実際にできた量（{unit}）
+            <FuriganaText text="実際にできた量" />（{unit}）
           </label>
           <input
             type="number"
@@ -85,7 +87,7 @@ export default function QuotaCheckboxReport({
             }}
             className="text-xs text-slate-500 hover:underline"
           >
-            チェックに戻る
+            <FuriganaText text="チェックに戻る" />
           </button>
         </div>
       )}
@@ -94,9 +96,13 @@ export default function QuotaCheckboxReport({
           type="submit"
           className="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded hover:bg-indigo-700"
         >
-          報告する
+          <FuriganaText text="報告する" />
         </button>
-        {saved && <span className="text-xs text-emerald-600">報告しました</span>}
+        {saved && (
+          <span className="text-xs text-emerald-600">
+            <FuriganaText text="報告しました" />
+          </span>
+        )}
       </div>
     </form>
   );
