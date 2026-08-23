@@ -105,9 +105,9 @@ export default function ProgressCalendar({ childId }: { childId: string }) {
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center">
+          <div className="grid grid-cols-7 gap-1.5 text-center">
             {WEEKDAY_LABELS.map((label) => (
-              <div key={label} className="text-[11px] text-slate-500 font-medium py-1">
+              <div key={label} className="text-xs text-slate-600 font-semibold py-1">
                 {label}
               </div>
             ))}
@@ -125,9 +125,9 @@ export default function ProgressCalendar({ childId }: { childId: string }) {
                   disabled={!clickable}
                   title={CALENDAR_STATUS_LABEL[d.status]}
                   onClick={() => setSelectedDate((cur) => (cur === d.date ? null : d.date))}
-                  className={`aspect-square rounded border text-sm flex items-center justify-center transition ${CALENDAR_STATUS_STYLE[d.status]} ${
+                  className={`aspect-square rounded-lg border-2 text-base flex items-center justify-center transition ${CALENDAR_STATUS_STYLE[d.status]} ${
                     clickable ? "active:scale-95" : "cursor-default"
-                  } ${isSelected ? "ring-2 ring-indigo-500" : ""}`}
+                  } ${isSelected ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}
                 >
                   {dayNum}
                 </button>
@@ -137,7 +137,7 @@ export default function ProgressCalendar({ childId }: { childId: string }) {
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 border-t border-slate-100">
             {LEGEND_STATUSES.map((status) => (
-              <span key={status} className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span key={status} className="flex items-center gap-1.5 text-xs text-slate-600">
                 <span
                   className={`inline-block w-3 h-3 rounded border ${CALENDAR_STATUS_STYLE[status]}`}
                 />
