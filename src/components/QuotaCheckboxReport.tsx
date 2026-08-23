@@ -75,7 +75,7 @@ export default function QuotaCheckboxReport({
               setOverrideValue(Number(e.target.value));
               setSaved(false);
             }}
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm w-24"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm w-24"
           />
           <button
             type="button"
@@ -83,7 +83,7 @@ export default function QuotaCheckboxReport({
               setOverrideMode(false);
               setSaved(false);
             }}
-            className="text-xs text-slate-400 hover:underline"
+            className="text-xs text-slate-500 hover:underline"
           >
             チェックに戻る
           </button>

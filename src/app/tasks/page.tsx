@@ -14,11 +14,12 @@ import type { HomeworkTask } from "@/lib/types";
 import { formatDateJP } from "@/lib/date";
 import BatchTaskForm from "@/components/BatchTaskForm";
 import TaskForm from "@/components/TaskForm";
+import ProgressCalendar from "@/components/ProgressCalendar";
 
 export default function TasksPage() {
   const { hydrated, currentUser, data, getChildrenOfAdmin } = useStore();
 
-  if (!hydrated) return <p className="text-slate-400 text-sm">読み込み中...</p>;
+  if (!hydrated) return <p className="text-slate-500 text-sm">読み込み中...</p>;
   if (!currentUser) {
     return (
       <div className="border border-slate-200 rounded-lg p-6 bg-white text-sm text-slate-600">
@@ -74,7 +75,7 @@ function AdminTasksView({
             className={`px-5 py-2.5 rounded-full text-base font-medium border-2 transition ${
               selected.id === c.id
                 ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white text-slate-600 border-slate-300 hover:border-indigo-400"
+                : "bg-white text-slate-600 border-slate-400 hover:border-indigo-400"
             }`}
           >
             {c.name}
@@ -127,8 +128,10 @@ function ChildTasksBoard({
         <TaskFormLazy childId={childId} adminId={adminId} onDone={() => setShowForm(false)} />
       )}
 
+      <ProgressCalendar childId={childId} />
+
       {tasks.length === 0 && (
-        <p className="text-sm text-slate-400">まだ課題が登録されていません。</p>
+        <p className="text-sm text-slate-500">まだ課題が登録されていません。</p>
       )}
 
       <ul className="space-y-3">
@@ -205,7 +208,7 @@ function TaskCard({
             <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}`}>
               優先度: {priorityLabel(task.priority)}
             </span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500">
               {task.type === "amount" ? "総量型（日割り）" : "個数型（週割り）"}
             </span>
           </div>

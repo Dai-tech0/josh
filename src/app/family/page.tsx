@@ -63,7 +63,7 @@ function LoginCodeReveal({ code }: { code: string }) {
       </button>
       <button
         onClick={() => setShown(false)}
-        className="ml-2 text-slate-400 hover:underline font-sans"
+        className="ml-2 text-slate-500 hover:underline font-sans"
       >
         隠す
       </button>
@@ -78,7 +78,7 @@ function LoginCodeReveal({ code }: { code: string }) {
 export default function FamilyPage() {
   const { hydrated, currentUser } = useStore();
 
-  if (!hydrated) return <p className="text-slate-400 text-sm">読み込み中...</p>;
+  if (!hydrated) return <p className="text-slate-500 text-sm">読み込み中...</p>;
 
   if (!currentUser) {
     return <NeedLogin />;
@@ -171,7 +171,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
         )}
 
         {children.length === 0 && (
-          <p className="text-sm text-slate-400">まだ子供アカウントがありません。</p>
+          <p className="text-sm text-slate-500">まだ子供アカウントがありません。</p>
         )}
         <ul className="space-y-6">
           {children.map((c) => (
@@ -180,7 +180,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <ChildNameEditor child={c} />
                   <ChildAgeEditor child={c} />
-                  <span className="text-xs text-slate-400">個別コード（個別に報告する場合）</span>
+                  <span className="text-xs text-slate-500">個別コード（個別に報告する場合）</span>
                   <LoginCodeReveal code={c.loginCode} />
                 </div>
                 <button
@@ -190,7 +190,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
                   子供を削除
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mb-2">オーナー（子供）</p>
+              <p className="text-xs text-slate-500 mb-2">オーナー（子供）</p>
               <ChildProgressCard childId={c.id} />
               <SharerManager childId={c.id} canEdit addedBy="admin" />
             </li>
@@ -203,7 +203,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
             value={newChildName}
             onChange={(e) => setNewChildName(e.target.value)}
             placeholder="子供の名前"
-            className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm"
+            className="flex-1 border border-slate-400 rounded px-3 py-2 text-sm"
           />
           <button
             type="submit"
@@ -239,7 +239,7 @@ function SharedCodeControl() {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-slate-400">
+      <span className="text-xs text-slate-500">
         共通コード（複数で1台の端末で報告する場合）
       </span>
       {sharedDeviceCode ? (
@@ -285,7 +285,7 @@ function ChildProgressCard({ childId }: { childId: string }) {
           {summary.recentDays.map((d) => (
             <div key={d.date} className="flex flex-col items-center gap-0.5">
               <StampBadge tier={d.tier} size="sm" />
-              <span className="text-[10px] text-slate-400">{formatDateJP(d.date)}</span>
+              <span className="text-[10px] text-slate-500">{formatDateJP(d.date)}</span>
             </div>
           ))}
         </div>
@@ -332,7 +332,7 @@ function ChildAgeEditor({ child }: { child: ChildUser }) {
           onChange={(e) => setValue(e.target.value)}
           autoFocus
           placeholder="年齢"
-          className="w-16 border border-slate-300 rounded px-2 py-1 text-xs"
+          className="w-16 border border-slate-400 rounded px-2 py-1 text-xs"
         />
         <button type="submit" className="text-xs text-indigo-600 hover:underline">
           保存
@@ -343,7 +343,7 @@ function ChildAgeEditor({ child }: { child: ChildUser }) {
             setValue(child.age?.toString() ?? "");
             setEditing(false);
           }}
-          className="text-xs text-slate-400 hover:underline"
+          className="text-xs text-slate-500 hover:underline"
         >
           キャンセル
         </button>
@@ -352,7 +352,7 @@ function ChildAgeEditor({ child }: { child: ChildUser }) {
   }
 
   return (
-    <span className="text-xs text-slate-400">
+    <span className="text-xs text-slate-500">
       {child.age !== undefined ? `${child.age}歳` : "年齢未設定"}
       <button onClick={() => setEditing(true)} className="ml-1 text-indigo-600 hover:underline">
         編集
@@ -393,7 +393,7 @@ function InlineNameEditor({
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
-          className="border border-slate-300 rounded px-2 py-1 text-sm"
+          className="border border-slate-400 rounded px-2 py-1 text-sm"
         />
         <button type="submit" className="text-xs text-indigo-600 hover:underline">
           保存
@@ -404,7 +404,7 @@ function InlineNameEditor({
             setName(initialName);
             setEditing(false);
           }}
-          className="text-xs text-slate-400 hover:underline"
+          className="text-xs text-slate-500 hover:underline"
         >
           キャンセル
         </button>
@@ -506,7 +506,7 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
             type="date"
             value={defaults.startDate}
             onChange={(e) => updateFamilyDefaults(adminId, { startDate: e.target.value })}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
           />
         </div>
         <div>
@@ -515,7 +515,7 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
             type="date"
             value={defaults.endDate}
             onChange={(e) => updateFamilyDefaults(adminId, { endDate: e.target.value })}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
           />
         </div>
       </div>
@@ -528,7 +528,7 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
               priority: e.target.value as "high" | "mid" | "low",
             })
           }
-          className="border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+          className="border border-slate-400 rounded px-3 py-2 text-sm bg-white"
         >
           <option value="high">高</option>
           <option value="mid">中</option>
@@ -548,7 +548,7 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
               className={`w-9 h-9 rounded-full text-sm border transition ${
                 defaults.pauseRule.weeklyDays.includes(idx)
                   ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-slate-600 border-slate-300 hover:border-indigo-400"
+                  : "bg-white text-slate-600 border-slate-400 hover:border-indigo-400"
               }`}
             >
               {label}
@@ -587,20 +587,20 @@ function FamilyDefaultsEditor({ adminId }: { adminId: string }) {
             value={rangeLabel}
             onChange={(e) => setRangeLabel(e.target.value)}
             placeholder="ラベル（例: 旅行）"
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm w-32"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm w-32"
           />
           <input
             type="date"
             value={rangeStart}
             onChange={(e) => setRangeStart(e.target.value)}
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm"
           />
-          <span className="text-slate-400 text-sm">〜</span>
+          <span className="text-slate-500 text-sm">〜</span>
           <input
             type="date"
             value={rangeEnd}
             onChange={(e) => setRangeEnd(e.target.value)}
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm"
           />
           <button
             type="button"
@@ -703,7 +703,7 @@ function SharerManager({
         />
       )}
       {sharers.length === 0 ? (
-        <p className="text-xs text-slate-400">共有者はまだいません。</p>
+        <p className="text-xs text-slate-500">共有者はまだいません。</p>
       ) : (
         <ul className="space-y-1">
           {sharers.map((s) => (
@@ -713,7 +713,7 @@ function SharerManager({
             >
               <span className="flex items-center gap-2">
                 {s.name}
-                <span className="text-xs text-slate-400">共有者（閲覧・応援のみ）</span>
+                <span className="text-xs text-slate-500">共有者（閲覧・応援のみ）</span>
                 <LoginCodeReveal code={s.loginCode} />
               </span>
               {canEdit && (
@@ -735,7 +735,7 @@ function SharerManager({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="共有者の名前（例: おばあちゃん）"
-            className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-sm"
+            className="flex-1 border border-slate-400 rounded px-3 py-1.5 text-sm"
           />
           <button
             type="submit"
@@ -755,7 +755,7 @@ function RolePermissionTable() {
       <h2 className="font-semibold mb-3 text-sm">役割ごとにできること</h2>
       <table className="w-full text-xs text-left border-collapse">
         <thead>
-          <tr className="text-slate-400 border-b border-slate-100">
+          <tr className="text-slate-500 border-b border-slate-100">
             <th className="py-1.5 pr-2 font-medium">役割</th>
             <th className="py-1.5 font-medium">できること</th>
           </tr>

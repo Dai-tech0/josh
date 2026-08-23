@@ -58,3 +58,23 @@ export function formatDateJP(iso: string): string {
   const d = parseISODate(iso);
   return `${d.getMonth() + 1}/${d.getDate()}(${weekdayLabel(iso)})`;
 }
+
+export function startOfMonth(iso: string): string {
+  const d = parseISODate(iso);
+  return toISODate(new Date(d.getFullYear(), d.getMonth(), 1));
+}
+
+export function endOfMonth(iso: string): string {
+  const d = parseISODate(iso);
+  return toISODate(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+}
+
+export function addMonths(iso: string, months: number): string {
+  const d = parseISODate(iso);
+  return toISODate(new Date(d.getFullYear(), d.getMonth() + months, 1));
+}
+
+export function monthLabelJP(iso: string): string {
+  const d = parseISODate(iso);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}

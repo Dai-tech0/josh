@@ -12,7 +12,7 @@ export default function ChildPicker() {
         <p className="text-sm text-slate-500 mt-1">自分の名前を選んでください。</p>
       </div>
       {data.children.length === 0 ? (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           まだ子供アカウントがありません。保護者に追加してもらってください。
         </p>
       ) : (

@@ -28,7 +28,7 @@ export default function FeedbackPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (!hydrated) {
-    return <p className="text-slate-400 text-sm">読み込み中...</p>;
+    return <p className="text-slate-500 text-sm">読み込み中...</p>;
   }
 
   if (!currentUser && !isDeveloper && !currentUserId) {
@@ -75,7 +75,7 @@ export default function FeedbackPage() {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="使ってみた感想や、こうだったらいいなと思うことを書いてください"
           rows={3}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
         <button
           type="submit"
@@ -88,11 +88,11 @@ export default function FeedbackPage() {
 
       <ul className="space-y-3">
         {feedbackPosts.length === 0 && (
-          <p className="text-sm text-slate-400">まだ投稿がありません。最初の投稿をしてみましょう。</p>
+          <p className="text-sm text-slate-500">まだ投稿がありません。最初の投稿をしてみましょう。</p>
         )}
         {feedbackPosts.map((post) => (
           <li key={post.id} className="border border-slate-200 rounded-lg bg-white p-4">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
               <span>
                 {(post.authorRole === "admin" || post.authorRole === "developer") && (
                   <>{post.authorName} </>

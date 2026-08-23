@@ -53,7 +53,7 @@ export default function Nav() {
             <Logo className="h-7 w-auto" />
           </Link>
           {!currentUserId && (
-            <span className="text-xs text-slate-400">親子で宿題を管理するサービス</span>
+            <span className="text-xs text-slate-500">親子で宿題を管理するサービス</span>
           )}
         </div>
         {!currentUserId && (
@@ -95,7 +95,7 @@ export default function Nav() {
               <span className="hidden sm:inline text-slate-500">
                 {currentUser.name}
                 {!isSharedDevice && (
-                  <span className="ml-1 text-xs text-slate-400">
+                  <span className="ml-1 text-xs text-slate-500">
                     ({ROLE_LABEL[currentUser.role]})
                   </span>
                 )}
@@ -115,7 +115,7 @@ export default function Nav() {
                 onChange={(e) => {
                   if (e.target.value) loginWithCode(e.target.value);
                 }}
-                className="border border-slate-300 rounded px-2 py-1 text-xs bg-white text-slate-600"
+                className="border border-slate-400 rounded px-2 py-1 text-xs bg-white text-slate-600"
               >
                 <option value="">他のアカウントに切替</option>
                 {switchableAccounts.map((a) => (

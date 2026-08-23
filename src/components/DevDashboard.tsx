@@ -88,7 +88,7 @@ export default function DevDashboard() {
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">読み込み中...</p>}
+      {loading && <p className="text-sm text-slate-500">読み込み中...</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {stats && (
@@ -100,7 +100,7 @@ export default function DevDashboard() {
           </div>
 
           {stats.length === 0 ? (
-            <p className="text-sm text-slate-400">まだ登録がありません。</p>
+            <p className="text-sm text-slate-500">まだ登録がありません。</p>
           ) : (
             <ul className="space-y-3">
               {stats.map((s) => (
@@ -181,7 +181,7 @@ function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => voi
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 autoFocus
-                className="border border-slate-300 rounded px-2 py-1 text-sm"
+                className="border border-slate-400 rounded px-2 py-1 text-sm"
               />
               <button type="submit" className="text-xs text-indigo-600 hover:underline">
                 保存
@@ -192,7 +192,7 @@ function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => voi
                   setNameInput(adminName);
                   setEditingName(false);
                 }}
-                className="text-xs text-slate-400 hover:underline"
+                className="text-xs text-slate-500 hover:underline"
               >
                 キャンセル
               </button>
@@ -216,7 +216,7 @@ function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => voi
               </button>
             </div>
           )}
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             {stat.adminEmail ?? "(メール未記録)"} ／ 登録日:{" "}
             {stat.createdAt ? stat.createdAt.slice(0, 10) : "-"} ／ 子供{children.length}人・
             共有者{sharers.length}人
@@ -254,7 +254,7 @@ function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => voi
       {open && (
         <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
           {stat.members.length === 0 && (
-            <p className="text-xs text-slate-400">メンバーはまだいません。</p>
+            <p className="text-xs text-slate-500">メンバーはまだいません。</p>
           )}
           {stat.members.map((m) => (
             <div
@@ -263,7 +263,7 @@ function FamilyRow({ stat, onDeleted }: { stat: FamilyStat; onDeleted: () => voi
             >
               <span>
                 {m.name}
-                <span className="text-xs text-slate-400 ml-2">
+                <span className="text-xs text-slate-500 ml-2">
                   {m.role === "owner" ? "子供" : "共有者"}
                 </span>
               </span>

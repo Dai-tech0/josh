@@ -6,7 +6,7 @@ import DevDashboard from "@/components/DevDashboard";
 export default function DevPage() {
   const { hydrated, currentUser, isDeveloper } = useStore();
 
-  if (!hydrated) return <p className="text-slate-400 text-sm">読み込み中...</p>;
+  if (!hydrated) return <p className="text-slate-500 text-sm">読み込み中...</p>;
   if (!currentUser) {
     return (
       <div className="border border-slate-200 rounded-lg p-6 bg-white text-sm text-slate-600">

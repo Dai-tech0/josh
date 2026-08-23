@@ -67,7 +67,7 @@ function AmountReportForm({ task, logs }: { task: HomeworkTask; logs: DailyLog[]
   const [justSubmitted, setJustSubmitted] = useState<number | null>(null);
 
   if (!todayRow) {
-    return <p className="text-xs text-slate-400">今日はこの課題の期間外です。</p>;
+    return <p className="text-xs text-slate-500">今日はこの課題の期間外です。</p>;
   }
   if (todayRow.isPause) {
     return (
@@ -118,12 +118,12 @@ function RecentStamps({ schedule }: { schedule: AmountSchedule }) {
 
   return (
     <div className="pt-1">
-      <p className="text-xs text-slate-400 mb-1">これまでの記録</p>
+      <p className="text-xs text-slate-500 mb-1">これまでの記録</p>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {recent.map((r) => (
           <div key={r.date} className="flex flex-col items-center shrink-0">
             <StampBadge tier={r.tier!} size="sm" />
-            <span className="text-[10px] text-slate-400 mt-0.5">{formatDateJP(r.date)}</span>
+            <span className="text-[10px] text-slate-500 mt-0.5">{formatDateJP(r.date)}</span>
           </div>
         ))}
       </div>
@@ -160,7 +160,7 @@ function CountReportForm({ task, logs }: { task: HomeworkTask; logs: DailyLog[] 
             setAmount(Number(e.target.value));
             setSaved(false);
           }}
-          className="border border-slate-300 rounded px-2 py-1.5 text-sm w-24"
+          className="border border-slate-400 rounded px-2 py-1.5 text-sm w-24"
         />
       </div>
       <button
@@ -209,7 +209,7 @@ function PauseDayQuickForm({
             setAmount(Number(e.target.value));
             setSaved(false);
           }}
-          className="border border-slate-300 rounded px-2 py-1.5 text-sm w-28"
+          className="border border-slate-400 rounded px-2 py-1.5 text-sm w-28"
         />
       </div>
       <button

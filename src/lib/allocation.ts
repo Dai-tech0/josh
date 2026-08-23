@@ -9,6 +9,111 @@
 import type { AchievementTier, CustomPauseRange, DailyLog, HomeworkTask, PauseRule } from "./types";
 import { addDays, dayOfWeek, eachDateInRange, isWithinRange, todayISO } from "./date";
 
+/**
+ * 総量課題（amount型）を横断して、日付ごとの統合評価を作る。
+ * ある日の評価は、その日に稼働していた課題のうち最も悪い評価を採用する
+ * （1つでも未達成があれば「missed」扱い）。summarizeChildProgress・カレンダー表示の両方で使う。
+ */
+function mergeDayTiers(
+  tasks: HomeworkTask[],
+  logs: DailyLog[],
+  today: string
+): Map<string, AchievementTier> {
+  const amountTasks = tasks.filter((t) => t.type === "amount");
+  const dateTiers = new Map<string, AchievementTier[]>();
+
+  for (const task of amountTasks) {
+    const schedule = buildAmountSchedule(task, logs, today);
+    for (const row of schedule.rows) {
+      if (row.isPause || row.tier === null || row.date > today) continue;
+      const arr = dateTiers.get(row.date) ?? [];
+      arr.push(row.tier);
+      dateTiers.set(row.date, arr);
+    }
+  }
+
+  const result = new Map<string, AchievementTier>();
+  for (const [date, tiers] of dateTiers) {
+    if (tiers.includes("missed")) result.set(date, "missed");
+    else if (tiers.includes("exceeded")) result.set(date, "exceeded");
+    else result.set(date, "met");
+  }
+  return result;
+}
+
+/** その日、稼働中の総量課題が全て休止日設定になっているか */
+function isPauseForAllActiveTasks(tasks: HomeworkTask[], date: string): boolean {
+  const active = tasks.filter(
+    (t) => t.type === "amount" && date >= t.startDate && date <= (t.extendedEndDate ?? t.endDate)
+  );
+  if (active.length === 0) return false;
+  return active.every((t) => isPauseDay(date, t.pauseRule));
+}
+
+export type CalendarDayStatus =
+  | "onTrack" // よく進んでいます
+  | "slightlyBehind" // 少し遅れています
+  | "quiteBehind" // だいぶ遅れています（3日連続未達成 = 遅延アラートの基準と同じ）
+  | "pause" // 休止日
+  | "future" // 未来日（未確定）
+  | "noTask"; // その日に対象の課題がない
+
+export interface CalendarDay {
+  date: string;
+  status: CalendarDayStatus;
+}
+
+export const CALENDAR_STATUS_LABEL: Record<CalendarDayStatus, string> = {
+  onTrack: "よく進んでいます",
+  slightlyBehind: "少し遅れています",
+  quiteBehind: "だいぶ遅れています",
+  pause: "休止日",
+  future: "これから",
+  noTask: "対象の課題なし",
+};
+
+export const CALENDAR_STATUS_STYLE: Record<CalendarDayStatus, string> = {
+  onTrack: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  slightlyBehind: "bg-amber-100 text-amber-700 border-amber-200",
+  quiteBehind: "bg-red-100 text-red-700 border-red-300",
+  pause: "bg-slate-100 text-slate-500 border-slate-200",
+  future: "bg-white text-slate-300 border-slate-100",
+  noTask: "bg-white text-slate-300 border-slate-100",
+};
+
+/**
+ * 指定した期間（通常は1ヶ月分）の、子供の日別進捗状況を作る。
+ * 「だいぶ遅れています」は遅延アラート条件（3日連続未達成）と同じ基準を使う。
+ */
+export function buildChildCalendar(
+  tasks: HomeworkTask[],
+  logs: DailyLog[],
+  rangeStart: string,
+  rangeEnd: string,
+  today: string = todayISO()
+): CalendarDay[] {
+  const dayTier = mergeDayTiers(tasks, logs, today);
+
+  return eachDateInRange(rangeStart, rangeEnd).map((date) => {
+    if (date > today) return { date, status: "future" };
+
+    const tier = dayTier.get(date);
+    if (tier === "missed") {
+      let consecutive = 0;
+      let cursor = date;
+      while (dayTier.get(cursor) === "missed") {
+        consecutive++;
+        cursor = addDays(cursor, -1);
+      }
+      return { date, status: consecutive >= 3 ? "quiteBehind" : "slightlyBehind" };
+    }
+    if (tier === "exceeded" || tier === "met") return { date, status: "onTrack" };
+
+    if (isPauseForAllActiveTasks(tasks, date)) return { date, status: "pause" };
+    return { date, status: "noTask" };
+  });
+}
+
 export function ceilDiv(a: number, b: number): number {
   if (b <= 0) return a > 0 ? a : 0;
   return Math.ceil(a / b);
@@ -216,25 +321,10 @@ export function summarizeChildProgress(
   logs: DailyLog[],
   today: string = todayISO()
 ): ChildProgressSummary {
-  const amountTasks = tasks.filter((t) => t.type === "amount");
-  const dateTiers = new Map<string, AchievementTier[]>();
-
-  for (const task of amountTasks) {
-    const schedule = buildAmountSchedule(task, logs, today);
-    for (const row of schedule.rows) {
-      if (row.isPause || row.tier === null || row.date > today) continue;
-      const arr = dateTiers.get(row.date) ?? [];
-      arr.push(row.tier);
-      dateTiers.set(row.date, arr);
-    }
-  }
+  const dateTiers = mergeDayTiers(tasks, logs, today);
 
   function dayTier(date: string): AchievementTier | null {
-    const tiers = dateTiers.get(date);
-    if (!tiers || tiers.length === 0) return null;
-    if (tiers.includes("missed")) return "missed";
-    if (tiers.includes("exceeded")) return "exceeded";
-    return "met";
+    return dateTiers.get(date) ?? null;
   }
 
   let achievedThisWeek = 0;

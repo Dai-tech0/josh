@@ -19,7 +19,7 @@ export default function Home() {
   const { hydrated, currentUser, isDeveloper, needsAdminProfile } = useStore();
 
   if (!hydrated) {
-    return <p className="text-slate-400 text-sm">読み込み中...</p>;
+    return <p className="text-slate-500 text-sm">読み込み中...</p>;
   }
 
   if (needsAdminProfile) {
@@ -28,7 +28,7 @@ export default function Home() {
 
   if (!currentUser) {
     return (
-      <Suspense fallback={<p className="text-slate-400 text-sm">読み込み中...</p>}>
+      <Suspense fallback={<p className="text-slate-500 text-sm">読み込み中...</p>}>
         <AuthGate />
       </Suspense>
     );
@@ -114,7 +114,7 @@ function CompleteAdminProfile() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="例: 山田 花子"
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
             key={currentUserId}
           />
         </div>

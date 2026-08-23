@@ -126,7 +126,7 @@ export default function TaskForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例: 算数ドリル"
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
 
@@ -138,7 +138,7 @@ export default function TaskForm({
             min={1}
             value={totalAmount}
             onChange={(e) => setTotalAmount(Number(e.target.value))}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
           />
         </div>
         <div>
@@ -146,7 +146,7 @@ export default function TaskForm({
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as TaskUnit)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
           >
             {UNITS.map((u) => (
               <option key={u} value={u}>
@@ -163,7 +163,7 @@ export default function TaskForm({
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
           >
             <option value="high">高</option>
             <option value="mid">中</option>
@@ -175,7 +175,7 @@ export default function TaskForm({
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TaskType)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
           >
             <option value="amount">総量型（日割り。例: ドリル◯ページ）</option>
             <option value="count">個数型（週割り。例: 感想文◯個）</option>
@@ -190,7 +190,7 @@ export default function TaskForm({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
           />
         </div>
         <div>
@@ -199,7 +199,7 @@ export default function TaskForm({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
           />
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function TaskForm({
               className={`w-9 h-9 rounded-full text-sm border transition ${
                 weeklyDays.includes(idx)
                   ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-slate-600 border-slate-300 hover:border-indigo-400"
+                  : "bg-white text-slate-600 border-slate-400 hover:border-indigo-400"
               }`}
             >
               {label}
@@ -256,20 +256,20 @@ export default function TaskForm({
             value={rangeLabel}
             onChange={(e) => setRangeLabel(e.target.value)}
             placeholder="ラベル（例: 旅行）"
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm w-32"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm w-32"
           />
           <input
             type="date"
             value={rangeStart}
             onChange={(e) => setRangeStart(e.target.value)}
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm"
           />
-          <span className="text-slate-400 text-sm">〜</span>
+          <span className="text-slate-500 text-sm">〜</span>
           <input
             type="date"
             value={rangeEnd}
             onChange={(e) => setRangeEnd(e.target.value)}
-            className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+            className="border border-slate-400 rounded px-2 py-1.5 text-sm"
           />
           <button
             type="button"

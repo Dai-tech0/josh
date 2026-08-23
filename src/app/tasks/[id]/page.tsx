@@ -16,7 +16,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [editing, setEditing] = useState(false);
 
-  if (!hydrated) return <p className="text-slate-400 text-sm">読み込み中...</p>;
+  if (!hydrated) return <p className="text-slate-500 text-sm">読み込み中...</p>;
   if (!currentUser) {
     return (
       <div className="border border-slate-200 rounded-lg p-6 bg-white text-sm text-slate-600">
@@ -78,7 +78,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}`}>
                     優先度: {priorityLabel(task.priority)}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500">
                     {task.type === "amount" ? "総量型（日割り）" : "個数型（週割り）"}
                   </span>
                 </div>
@@ -89,7 +89,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   {formatDateJP(task.extendedEndDate ?? task.endDate)}
                 </p>
                 {(task.pauseRule.weeklyDays.length > 0 || task.pauseRule.customRanges.length > 0) && (
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     休止日:{" "}
                     {task.pauseRule.weeklyDays
                       .map((d) => ["日", "月", "火", "水", "木", "金", "土"][d])
@@ -173,7 +173,7 @@ function AmountView({
             <select
               value={reportDate}
               onChange={(e) => setReportDate(e.target.value)}
-              className="border border-slate-300 rounded px-2 py-1.5 text-sm bg-white"
+              className="border border-slate-400 rounded px-2 py-1.5 text-sm bg-white"
             >
               {schedule.rows
                 .filter((r) => r.date <= today)
@@ -222,7 +222,7 @@ function AmountView({
               <tr
                 key={r.date}
                 className={`border-t border-slate-100 ${r.date === today ? "bg-indigo-50" : ""} ${
-                  r.isPause ? "text-slate-400" : ""
+                  r.isPause ? "text-slate-500" : ""
                 }`}
               >
                 <td className="px-3 py-1.5">
@@ -302,7 +302,7 @@ function CountView({
               max={today}
               min={task.startDate}
               onChange={(e) => setReportDate(e.target.value)}
-              className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+              className="border border-slate-400 rounded px-2 py-1.5 text-sm"
             />
           </div>
           <div>
@@ -314,7 +314,7 @@ function CountView({
               min={0}
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="border border-slate-300 rounded px-2 py-1.5 text-sm w-24"
+              className="border border-slate-400 rounded px-2 py-1.5 text-sm w-24"
             />
           </div>
           <button
@@ -395,7 +395,7 @@ function PauseDayInlineForm({
             setAmount(Number(e.target.value));
             setSaved(false);
           }}
-          className="border border-slate-300 rounded px-2 py-1.5 text-sm w-28"
+          className="border border-slate-400 rounded px-2 py-1.5 text-sm w-28"
         />
       </div>
       <button

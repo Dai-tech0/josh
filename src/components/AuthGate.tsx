@@ -80,7 +80,7 @@ function PasswordInput({
         minLength={minLength}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-slate-300 rounded px-3 py-2 pr-14 text-sm"
+        className="w-full border border-slate-400 rounded px-3 py-2 pr-14 text-sm"
       />
       <button
         type="button"
@@ -154,7 +154,7 @@ function AdminLoginForm({ onSignup }: { onSignup: () => void }) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
       <div>
@@ -244,7 +244,7 @@ function PasswordResetForm({ initialEmail, onBack }: { initialEmail: string; onB
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
       <div className="flex items-center gap-3">
@@ -297,7 +297,7 @@ function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () =>
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例: 山田 花子"
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
       <div>
@@ -307,7 +307,7 @@ function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () =>
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
       <div>
@@ -385,7 +385,7 @@ function EmailLinkForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
         />
       </div>
       <button
@@ -438,21 +438,21 @@ function CodeLoginForm() {
                   className="text-left flex-1 hover:text-indigo-600 disabled:opacity-50"
                 >
                   {a.name}
-                  <span className="text-xs text-slate-400 ml-2">
+                  <span className="text-xs text-slate-500 ml-2">
                     {a.role === "owner" ? "子供" : "共有者"}
                   </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => forgetCodeAccount(a.code)}
-                  className="text-xs text-slate-400 hover:text-red-500 hover:underline ml-2"
+                  className="text-xs text-slate-500 hover:text-red-500 hover:underline ml-2"
                 >
                   削除
                 </button>
               </li>
             ))}
           </ul>
-          <p className="text-xs text-slate-400 mt-2">または、コードを直接入力してログイン</p>
+          <p className="text-xs text-slate-500 mt-2">または、コードを直接入力してログイン</p>
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -468,9 +468,9 @@ function CodeLoginForm() {
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="例: K3F9QZ"
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm tracking-widest uppercase"
+          className="w-full border border-slate-400 rounded px-3 py-2 text-sm tracking-widest uppercase"
         />
-        <p className="text-xs text-slate-400 mt-1">保護者から教えてもらった6桁のコードを入力してください。</p>
+        <p className="text-xs text-slate-500 mt-1">保護者から教えてもらった6桁のコードを入力してください。</p>
       </div>
       <button
         type="submit"

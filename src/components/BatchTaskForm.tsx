@@ -131,7 +131,7 @@ export default function BatchTaskForm({
         return (
           <div key={entry.key} className="border border-slate-200 rounded-lg p-4 space-y-3 relative">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400">宿題{idx + 1}</span>
+              <span className="text-xs font-medium text-slate-500">宿題{idx + 1}</span>
               {entries.length > 1 && (
                 <button
                   type="button"
@@ -149,7 +149,7 @@ export default function BatchTaskForm({
                 <select
                   value={entry.subject}
                   onChange={(e) => updateEntry(entry.key, { subject: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+                  className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
                 >
                   {SUBJECTS.map((s) => (
                     <option key={s} value={s}>
@@ -165,7 +165,7 @@ export default function BatchTaskForm({
                   onChange={(e) =>
                     updateEntry(entry.key, { priority: e.target.value as TaskPriority })
                   }
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+                  className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
                 >
                   <option value="high">高</option>
                   <option value="mid">中</option>
@@ -182,7 +182,7 @@ export default function BatchTaskForm({
                     value={entry.customName}
                     onChange={(e) => updateEntry(entry.key, { customName: e.target.value })}
                     placeholder="例: 縄跳び"
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
@@ -193,7 +193,7 @@ export default function BatchTaskForm({
                     value={entry.customUnit}
                     onChange={(e) => updateEntry(entry.key, { customUnit: e.target.value })}
                     placeholder="例: 回、枚、分"
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
                   />
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function BatchTaskForm({
                   onChange={(e) =>
                     updateEntry(entry.key, { totalAmount: Number(e.target.value) })
                   }
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
                 />
               </div>
               {!preset && (
@@ -224,7 +224,7 @@ export default function BatchTaskForm({
                     onChange={(e) =>
                       updateEntry(entry.key, { customType: e.target.value as TaskType })
                     }
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white"
+                    className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
                   >
                     <option value="amount">総量型（日割り）</option>
                     <option value="count">個数型（週割り）</option>
@@ -240,7 +240,7 @@ export default function BatchTaskForm({
                   type="date"
                   value={entry.startDate}
                   onChange={(e) => updateEntry(entry.key, { startDate: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -249,7 +249,7 @@ export default function BatchTaskForm({
                   type="date"
                   value={entry.endDate}
                   onChange={(e) => updateEntry(entry.key, { endDate: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-slate-400 rounded px-3 py-2 text-sm"
                 />
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function BatchTaskForm({
                     className={`w-8 h-8 rounded-full text-xs border transition ${
                       entry.weeklyDays.includes(dIdx)
                         ? "bg-indigo-600 text-white border-indigo-600"
-                        : "bg-white text-slate-600 border-slate-300 hover:border-indigo-400"
+                        : "bg-white text-slate-600 border-slate-400 hover:border-indigo-400"
                     }`}
                   >
                     {label}
@@ -282,7 +282,7 @@ export default function BatchTaskForm({
       <button
         type="button"
         onClick={addEntry}
-        className="w-full border border-dashed border-slate-300 rounded-lg py-2 text-sm text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
+        className="w-full border border-dashed border-slate-400 rounded-lg py-2 text-sm text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
       >
         ＋ 宿題をもう1つ追加
       </button>
