@@ -22,7 +22,7 @@ import {
 } from "@/lib/date";
 
 const WEEKDAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
-const LEGEND_STATUSES = ["onTrack", "slightlyBehind", "quiteBehind", "pause"] as const;
+const LEGEND_STATUSES = ["onTrack", "slightlyBehind", "quiteBehind", "pause", "pauseRecorded"] as const;
 const TIER_DOT: Record<string, string> = {
   exceeded: "bg-emerald-500",
   met: "bg-emerald-500",
@@ -160,7 +160,15 @@ export default function ProgressCalendar({ childId }: { childId: string }) {
                       </Link>
                       <span className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0 ml-2">
                         {row.isPause ? (
-                          "休止日"
+                          row.doneAmount && row.doneAmount > 0 ? (
+                            <span className="flex items-center gap-1.5 text-red-600 font-semibold">
+                              <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
+                              休止日にがんばった！ {row.doneAmount}
+                              {task.unit}
+                            </span>
+                          ) : (
+                            "休止日"
+                          )
                         ) : (
                           <>
                             <span

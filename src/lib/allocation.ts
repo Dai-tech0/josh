@@ -55,6 +55,7 @@ export type CalendarDayStatus =
   | "slightlyBehind" // 少し遅れています
   | "quiteBehind" // だいぶ遅れています（3日連続未達成 = 遅延アラートの基準と同じ）
   | "pause" // 休止日
+  | "pauseRecorded" // 休止日だが自主的に記録した（目立たせる）
   | "future" // 未来日（未確定）
   | "noTask"; // その日に対象の課題がない
 
@@ -68,6 +69,7 @@ export const CALENDAR_STATUS_LABEL: Record<CalendarDayStatus, string> = {
   slightlyBehind: "少し遅れています",
   quiteBehind: "だいぶ遅れています",
   pause: "休止日",
+  pauseRecorded: "休止日にがんばった！",
   future: "これから",
   noTask: "対象の課題なし",
 };
@@ -77,6 +79,7 @@ export const CALENDAR_STATUS_STYLE: Record<CalendarDayStatus, string> = {
   slightlyBehind: "bg-amber-100 text-amber-800 border-amber-300 font-semibold",
   quiteBehind: "bg-red-100 text-red-800 border-red-400 font-semibold",
   pause: "bg-slate-100 text-slate-600 border-slate-300",
+  pauseRecorded: "bg-slate-100 text-red-600 border-red-500 font-bold ring-2 ring-red-500 ring-offset-1",
   future: "bg-white text-slate-400 border-slate-200",
   noTask: "bg-slate-50 text-slate-500 border-slate-200",
 };
@@ -84,6 +87,8 @@ export const CALENDAR_STATUS_STYLE: Record<CalendarDayStatus, string> = {
 /**
  * 指定した期間（通常は1ヶ月分）の、子供の日別進捗状況を作る。
  * 「だいぶ遅れています」は遅延アラート条件（3日連続未達成）と同じ基準を使う。
+ * 休止日でも自主的に記録した日は「pauseRecorded」として目立たせる（休止日は本来ノルマが発生しないため
+ * mergeDayTiersの評価対象外だが、記録の有無だけは別途拾う）。
  */
 export function buildChildCalendar(
   tasks: HomeworkTask[],
@@ -93,6 +98,17 @@ export function buildChildCalendar(
   today: string = todayISO()
 ): CalendarDay[] {
   const dayTier = mergeDayTiers(tasks, logs, today);
+
+  const pauseRecordedDates = new Set<string>();
+  for (const task of tasks) {
+    if (task.type !== "amount") continue;
+    const schedule = buildAmountSchedule(task, logs, today);
+    for (const row of schedule.rows) {
+      if (row.isPause && row.date <= today && row.doneAmount && row.doneAmount > 0) {
+        pauseRecordedDates.add(row.date);
+      }
+    }
+  }
 
   return eachDateInRange(rangeStart, rangeEnd).map((date) => {
     if (date > today) return { date, status: "future" };
@@ -109,6 +125,7 @@ export function buildChildCalendar(
     }
     if (tier === "exceeded" || tier === "met") return { date, status: "onTrack" };
 
+    if (pauseRecordedDates.has(date)) return { date, status: "pauseRecorded" };
     if (isPauseForAllActiveTasks(tasks, date)) return { date, status: "pause" };
     return { date, status: "noTask" };
   });

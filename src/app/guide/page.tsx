@@ -4,7 +4,13 @@ export const metadata = {
   title: "使い方ガイド - Yatta",
 };
 
-const CALENDAR_LEGEND_STATUSES = ["onTrack", "slightlyBehind", "quiteBehind", "pause"] as const;
+const CALENDAR_LEGEND_STATUSES = [
+  "onTrack",
+  "slightlyBehind",
+  "quiteBehind",
+  "pause",
+  "pauseRecorded",
+] as const;
 
 export default function GuidePage() {
   return (
