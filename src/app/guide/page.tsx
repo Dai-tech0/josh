@@ -1,6 +1,10 @@
+import { CALENDAR_STATUS_LABEL, CALENDAR_STATUS_STYLE } from "@/lib/allocation";
+
 export const metadata = {
   title: "使い方ガイド - Yatta",
 };
+
+const CALENDAR_LEGEND_STATUSES = ["onTrack", "slightlyBehind", "quiteBehind", "pause"] as const;
 
 export default function GuidePage() {
   return (
@@ -16,6 +20,9 @@ export default function GuidePage() {
           <li>トップページの「保護者 新規登録」からメールアドレスで登録します。</li>
           <li>「家族・権限」ページから子供を追加すると、ログインコード(6文字)が発行されます。</li>
           <li>「課題・目標」ページから宿題を登録すると、日々のノルマが自動で計算されます。</li>
+          <li>
+            「家族・権限」ページの子供一覧から、読みやすさに合わせて「ふりがなON/OFF」を切り替えられます（下記参照）。
+          </li>
         </ol>
       </section>
 
@@ -24,8 +31,84 @@ export default function GuidePage() {
         <ol className="list-decimal list-inside text-sm text-slate-700 space-y-2">
           <li>保護者からもらった6文字のログインコードで「コードでログイン」します。</li>
           <li>今日のノルマを確認して、終わったらチェックを入れて報告します。</li>
+          <li>「課題・目標」ページのカレンダーで、これまでの進み具合を色で確認できます（下記参照）。</li>
           <li>一度ログインした端末では、次回から画面上部の切替メニューでかんたんに戻れます。</li>
         </ol>
+      </section>
+
+      <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold">進捗カレンダーの見方</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            「課題・目標」ページの課題一覧の上に、月ごとのカレンダーが表示されます。マスの色で毎日の進み具合が一目でわかります。日付をタップすると、その日にやった課題の詳細が下に開きます。
+          </p>
+        </div>
+        <div className="border border-slate-200 rounded-lg bg-slate-50 p-4">
+          <div className="grid grid-cols-7 gap-1.5 max-w-[220px]">
+            {["日", "月", "火", "水", "木", "金", "土"].map((label) => (
+              <div key={label} className="text-[10px] text-slate-500 text-center font-semibold">
+                {label}
+              </div>
+            ))}
+            {[
+              "onTrack",
+              "onTrack",
+              "slightlyBehind",
+              "onTrack",
+              "quiteBehind",
+              "pause",
+              "onTrack",
+            ].map((status, i) => (
+              <div
+                key={i}
+                className={`aspect-square rounded border-2 text-[11px] flex items-center justify-center ${CALENDAR_STATUS_STYLE[status as keyof typeof CALENDAR_STATUS_STYLE]}`}
+              >
+                {i + 1}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 pt-3 mt-3 border-t border-slate-200">
+            {CALENDAR_LEGEND_STATUSES.map((status) => (
+              <span key={status} className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span
+                  className={`inline-block w-3 h-3 rounded border ${CALENDAR_STATUS_STYLE[status]}`}
+                />
+                {CALENDAR_STATUS_LABEL[status]}
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">
+          「だいぶ遅れています」は3日連続で未達成になったときに表示されます。
+        </p>
+      </section>
+
+      <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold">ふりがな表示（お子さん向け）</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            まだ漢字に慣れていないお子さんでも読みやすいように、画面の漢字にふりがなを付けられます。「家族・権限」ページで保護者が子供ごとにON/OFFを切り替えます。
+          </p>
+        </div>
+        <div className="border border-slate-200 rounded-lg bg-slate-50 p-4 flex items-center gap-6 flex-wrap">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 mb-1">OFFのとき</p>
+            <p className="text-lg font-medium">今日の課題</p>
+          </div>
+          <span className="text-slate-300">→</span>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-500 mb-1">ONのとき</p>
+            <p className="text-lg font-medium leading-loose">
+              <ruby>
+                今日<rt className="text-[0.55em] text-slate-500">きょう</rt>
+              </ruby>
+              の
+              <ruby>
+                課題<rt className="text-[0.55em] text-slate-500">かだい</rt>
+              </ruby>
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-3">
@@ -34,13 +117,19 @@ export default function GuidePage() {
           <div>
             <p className="font-medium">パスワードを忘れた</p>
             <p className="text-slate-500">
-              保護者ログイン画面の「パスワードをお忘れですか？」からリセットメールを送れます。
+              保護者ログイン画面の「パスワードをお忘れですか？」からリセットメールを送れます。ログイン画面のパスワード欄にある「表示」ボタンで、入力内容を確認しながら入力することもできます。
             </p>
           </div>
           <div>
             <p className="font-medium">同じ端末を子供2人以上で使いたい</p>
             <p className="text-slate-500">
               一度コードでログインすると、画面上部の「他のアカウントに切替」からログアウトなしで切り替えられます。
+            </p>
+          </div>
+          <div>
+            <p className="font-medium">ログインコードをコピーして送りたい</p>
+            <p className="text-slate-500">
+              「家族・権限」ページの「コードを表示」を押すと、コードの横に「コピー」ボタンが出るので、そのままメッセージアプリなどに貼り付けられます。
             </p>
           </div>
         </div>
