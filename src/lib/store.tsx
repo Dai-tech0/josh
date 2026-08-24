@@ -246,7 +246,7 @@ interface StoreContextValue {
   updateFamilyDefaults: (adminId: string, patch: Partial<FamilyDefaults>) => Promise<void>;
   // 全ユーザー共通のフィードバック掲示板
   feedbackPosts: FeedbackPost[];
-  postFeedback: (message: string) => Promise<void>;
+  postFeedback: (message: string, parentId?: string) => Promise<void>;
   // ヘルパー
   getChildrenOfAdmin: (adminId: string) => ChildUser[];
   getSharersOfChild: (childId: string) => SharerUser[];
@@ -389,6 +389,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               authorRole: data.authorRole as FeedbackPost["authorRole"],
               message: data.message as string,
               createdAt: data.createdAt as string,
+              parentId: data.parentId as string | undefined,
             };
           })
         );
@@ -828,20 +829,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const postFeedback = useCallback(
-    async (message: string) => {
+    async (message: string, parentId?: string) => {
       if (!firebaseUser) throw new Error("認証されていません");
       const trimmed = message.trim();
       if (!trimmed) return;
       const authorName = currentUser?.name ?? (isDeveloper ? "開発者" : firebaseUser.email ?? "匿名");
       const authorRole: FeedbackPost["authorRole"] = currentUser?.role ?? "developer";
       const ref = doc(collection(db, "feedback"));
-      await setDoc(ref, {
-        authorId: firebaseUser.uid,
-        authorName,
-        authorRole,
-        message: trimmed,
-        createdAt: new Date().toISOString(),
-      });
+      await setDoc(
+        ref,
+        sanitizeForFirestore({
+          authorId: firebaseUser.uid,
+          authorName,
+          authorRole,
+          message: trimmed,
+          createdAt: new Date().toISOString(),
+          parentId,
+        })
+      );
     },
     [firebaseUser, currentUser, isDeveloper]
   );

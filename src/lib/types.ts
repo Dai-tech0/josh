@@ -103,6 +103,7 @@ export interface FeedbackPost {
   authorRole: Role | "developer";
   message: string;
   createdAt: string; // ISO datetime
+  parentId?: string; // 設定されていれば、この投稿への返信
 }
 
 // 日次報告の自動評価（3段階シール）
