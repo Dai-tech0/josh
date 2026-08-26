@@ -162,10 +162,16 @@ function TaskFormLazy({
   adminId: string;
   onDone: () => void;
 }) {
-  const { getFamilyDefaults } = useStore();
+  const { getFamilyDefaults, data } = useStore();
+  const childAge = data.children.find((c) => c.id === childId)?.age;
   return (
     <div className="border border-slate-200 rounded-lg bg-white p-5">
-      <BatchTaskForm childId={childId} defaults={getFamilyDefaults(adminId)} onDone={onDone} />
+      <BatchTaskForm
+        childId={childId}
+        childAge={childAge}
+        defaults={getFamilyDefaults(adminId)}
+        onDone={onDone}
+      />
     </div>
   );
 }

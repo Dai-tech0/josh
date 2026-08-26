@@ -120,6 +120,7 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
   const admin = data.admins.find((a) => a.id === adminId);
   const children = getChildrenOfAdmin(adminId);
   const [newChildName, setNewChildName] = useState("");
+  const [newChildAge, setNewChildAge] = useState("");
   const [newlyCreated, setNewlyCreated] = useState<{ name: string; code: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,9 +139,15 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
     setError(null);
     const name = newChildName.trim();
     if (!name) return;
+    const age = Number(newChildAge);
+    if (newChildAge.trim() === "" || !Number.isInteger(age) || age < 0 || age > 99) {
+      setError("年齢を0〜99の数字で入力してください（学年に合わせた課題候補の表示に使います）。");
+      return;
+    }
     try {
-      const created = await addChild(name);
+      const created = await addChild(name, age);
       setNewChildName("");
+      setNewChildAge("");
       setNewlyCreated({ name, code: created.loginCode });
     } catch {
       setError("子供アカウントの作成に失敗しました。もう一度お試しください。");
@@ -206,12 +213,21 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
         </ul>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <form onSubmit={handleAddChild} className="flex gap-2 pt-2 border-t border-slate-100">
+        <form onSubmit={handleAddChild} className="flex gap-2 pt-2 border-t border-slate-100 flex-wrap">
           <input
             value={newChildName}
             onChange={(e) => setNewChildName(e.target.value)}
             placeholder="子供の名前"
-            className="flex-1 border border-slate-400 rounded px-3 py-2 text-sm"
+            className="flex-1 min-w-[8rem] border border-slate-400 rounded px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            min={0}
+            max={99}
+            value={newChildAge}
+            onChange={(e) => setNewChildAge(e.target.value)}
+            placeholder="年齢"
+            className="w-20 border border-slate-400 rounded px-3 py-2 text-sm"
           />
           <button
             type="submit"
@@ -344,7 +360,7 @@ function ChildAgeEditor({ child }: { child: ChildUser }) {
       return;
     }
     const parsed = Number(trimmed);
-    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 18) return;
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 99) return;
     updateChildAge(child.id, parsed);
     setEditing(false);
   }
@@ -355,7 +371,7 @@ function ChildAgeEditor({ child }: { child: ChildUser }) {
         <input
           type="number"
           min={0}
-          max={18}
+          max={99}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           autoFocus

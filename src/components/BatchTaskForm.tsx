@@ -2,23 +2,31 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import type { FamilyDefaults, TaskPriority, TaskType, TaskUnit } from "@/lib/types";
+import type { CustomPauseRange, FamilyDefaults, TaskPriority, TaskType } from "@/lib/types";
+import { newCustomRange } from "@/lib/allocation";
 import { addDays, todayISO } from "@/lib/date";
+import {
+  DRILL_CATEGORIES,
+  DRILL_CATEGORY_LABEL,
+  DRILL_PRESETS,
+  defaultDrillCategoryForAge,
+  type DrillCategory,
+} from "@/lib/drillPresets";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+const FREE_INPUT = "自由入力";
 
-// 科目プリセット: 選ぶと単位・課題タイプが自動で決まる（自由入力のみ手動指定）
-const SUBJECT_PRESETS: Record<string, { unit: TaskUnit; type: TaskType; amountLabel: string } | null> = {
-  国語ドリル: { unit: "ページ", type: "amount", amountLabel: "ページ数" },
-  算数ドリル: { unit: "ページ", type: "amount", amountLabel: "ページ数" },
-  理科ドリル: { unit: "ページ", type: "amount", amountLabel: "ページ数" },
-  読書: { unit: "冊", type: "count", amountLabel: "冊数" },
-  自由入力: null,
-};
-const SUBJECTS = Object.keys(SUBJECT_PRESETS);
+function subjectsOf(category: DrillCategory): string[] {
+  return [...Object.keys(DRILL_PRESETS[category]), FREE_INPUT];
+}
+
+function presetOf(category: DrillCategory, subject: string) {
+  return DRILL_PRESETS[category][subject] ?? null;
+}
 
 interface Entry {
   key: string;
+  category: DrillCategory;
   subject: string;
   customName: string;
   customUnit: string;
@@ -28,12 +36,15 @@ interface Entry {
   startDate: string;
   endDate: string;
   weeklyDays: number[];
+  customRanges: CustomPauseRange[];
 }
 
-function makeEntry(defaults?: FamilyDefaults): Entry {
+function makeEntry(defaults?: FamilyDefaults, childAge?: number): Entry {
+  const category = defaultDrillCategoryForAge(childAge);
   return {
     key: crypto.randomUUID(),
-    subject: "国語ドリル",
+    category,
+    subject: subjectsOf(category)[0],
     customName: "",
     customUnit: "",
     customType: "amount",
@@ -42,21 +53,31 @@ function makeEntry(defaults?: FamilyDefaults): Entry {
     startDate: defaults?.startDate ?? todayISO(),
     endDate: defaults?.endDate ?? addDays(todayISO(), 13),
     weeklyDays: defaults?.pauseRule.weeklyDays ?? [],
+    customRanges: defaults?.pauseRule.customRanges ?? [],
   };
 }
 
 export default function BatchTaskForm({
   childId,
+  childAge,
   defaults,
   onDone,
 }: {
   childId: string;
+  childAge?: number;
   defaults?: FamilyDefaults;
   onDone: () => void;
 }) {
   const { addTask } = useStore();
-  const [entries, setEntries] = useState<Entry[]>([makeEntry(defaults)]);
+  const [entries, setEntries] = useState<Entry[]>([makeEntry(defaults, childAge)]);
   const [error, setError] = useState<string | null>(null);
+  const [rangeInputs, setRangeInputs] = useState<
+    Record<string, { label: string; start: string; end: string }>
+  >({});
+
+  function rangeInputFor(key: string) {
+    return rangeInputs[key] ?? { label: "", start: todayISO(), end: todayISO() };
+  }
 
   function updateEntry(key: string, patch: Partial<Entry>) {
     setEntries((prev) => prev.map((e) => (e.key === key ? { ...e, ...patch } : e)));
@@ -78,11 +99,33 @@ export default function BatchTaskForm({
   }
 
   function addEntry() {
-    setEntries((prev) => [...prev, makeEntry(defaults)]);
+    setEntries((prev) => [...prev, makeEntry(defaults, childAge)]);
   }
 
   function removeEntry(key: string) {
     setEntries((prev) => (prev.length > 1 ? prev.filter((e) => e.key !== key) : prev));
+  }
+
+  function addRange(key: string) {
+    const input = rangeInputFor(key);
+    if (!input.label.trim()) return;
+    if (input.start > input.end) {
+      setError("休止期間の開始日は終了日より前にしてください。");
+      return;
+    }
+    updateEntry(key, {
+      customRanges: [
+        ...(entries.find((e) => e.key === key)?.customRanges ?? []),
+        newCustomRange(input.label.trim(), input.start, input.end),
+      ],
+    });
+    setRangeInputs((prev) => ({ ...prev, [key]: { label: "", start: todayISO(), end: todayISO() } }));
+  }
+
+  function removeRange(key: string, rangeId: string) {
+    const entry = entries.find((e) => e.key === key);
+    if (!entry) return;
+    updateEntry(key, { customRanges: entry.customRanges.filter((r) => r.id !== rangeId) });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -90,7 +133,7 @@ export default function BatchTaskForm({
     setError(null);
 
     for (const entry of entries) {
-      const preset = SUBJECT_PRESETS[entry.subject];
+      const preset = presetOf(entry.category, entry.subject);
       const name = preset ? entry.subject : entry.customName.trim();
       if (!name) return setError("「自由入力」の課題名を入力してください。");
       if (entry.totalAmount <= 0) return setError(`「${name}」の総量は1以上にしてください。`);
@@ -101,7 +144,7 @@ export default function BatchTaskForm({
 
     await Promise.all(
       entries.map((entry) => {
-        const preset = SUBJECT_PRESETS[entry.subject];
+        const preset = presetOf(entry.category, entry.subject);
         return addTask({
           childId,
           name: preset ? entry.subject : entry.customName.trim(),
@@ -111,7 +154,7 @@ export default function BatchTaskForm({
           priority: entry.priority,
           startDate: entry.startDate,
           endDate: entry.endDate,
-          pauseRule: { weeklyDays: entry.weeklyDays, customRanges: [] },
+          pauseRule: { weeklyDays: entry.weeklyDays, customRanges: entry.customRanges },
         });
       })
     );
@@ -127,7 +170,7 @@ export default function BatchTaskForm({
       )}
 
       {entries.map((entry, idx) => {
-        const preset = SUBJECT_PRESETS[entry.subject];
+        const preset = presetOf(entry.category, entry.subject);
         return (
           <div key={entry.key} className="border border-slate-200 rounded-lg p-4 space-y-3 relative">
             <div className="flex items-center justify-between">
@@ -143,6 +186,28 @@ export default function BatchTaskForm({
               )}
             </div>
 
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">学年区分</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {DRILL_CATEGORIES.map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    onClick={() =>
+                      updateEntry(entry.key, { category: c, subject: subjectsOf(c)[0] })
+                    }
+                    className={`px-3 py-1.5 rounded-full text-xs border transition ${
+                      entry.category === c
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white text-slate-600 border-slate-400 hover:border-indigo-400"
+                    }`}
+                  >
+                    {DRILL_CATEGORY_LABEL[c]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">科目</label>
@@ -151,7 +216,7 @@ export default function BatchTaskForm({
                   onChange={(e) => updateEntry(entry.key, { subject: e.target.value })}
                   className="w-full border border-slate-400 rounded px-3 py-2 text-sm bg-white"
                 >
-                  {SUBJECTS.map((s) => (
+                  {subjectsOf(entry.category).map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -273,6 +338,76 @@ export default function BatchTaskForm({
                     {label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-2">
+                休止日（個別期間指定。例: 旅行期間）
+              </label>
+              {entry.customRanges.length > 0 && (
+                <ul className="space-y-1 mb-2">
+                  {entry.customRanges.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center justify-between text-sm bg-slate-50 rounded px-3 py-1.5"
+                    >
+                      <span>
+                        {r.label}: {r.start} 〜 {r.end}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeRange(entry.key, r.id)}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        削除
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-wrap gap-2 items-center">
+                <input
+                  value={rangeInputFor(entry.key).label}
+                  onChange={(e) =>
+                    setRangeInputs((prev) => ({
+                      ...prev,
+                      [entry.key]: { ...rangeInputFor(entry.key), label: e.target.value },
+                    }))
+                  }
+                  placeholder="ラベル（例: 旅行）"
+                  className="border border-slate-400 rounded px-2 py-1.5 text-sm w-28"
+                />
+                <input
+                  type="date"
+                  value={rangeInputFor(entry.key).start}
+                  onChange={(e) =>
+                    setRangeInputs((prev) => ({
+                      ...prev,
+                      [entry.key]: { ...rangeInputFor(entry.key), start: e.target.value },
+                    }))
+                  }
+                  className="border border-slate-400 rounded px-2 py-1.5 text-sm"
+                />
+                <span className="text-slate-500 text-sm">〜</span>
+                <input
+                  type="date"
+                  value={rangeInputFor(entry.key).end}
+                  onChange={(e) =>
+                    setRangeInputs((prev) => ({
+                      ...prev,
+                      [entry.key]: { ...rangeInputFor(entry.key), end: e.target.value },
+                    }))
+                  }
+                  className="border border-slate-400 rounded px-2 py-1.5 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addRange(entry.key)}
+                  className="bg-slate-700 text-white text-xs px-3 py-1.5 rounded hover:bg-slate-800"
+                >
+                  期間を追加
+                </button>
               </div>
             </div>
           </div>

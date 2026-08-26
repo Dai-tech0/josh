@@ -219,7 +219,7 @@ interface StoreContextValue {
   forgetCodeAccount: (code: string) => void;
   // 権限モデル（セクション2）
   updateAdmin: (adminId: string, name: string) => Promise<void>;
-  addChild: (name: string) => Promise<ChildUser>;
+  addChild: (name: string, age: number) => Promise<ChildUser>;
   updateChild: (childId: string, name: string) => Promise<void>;
   updateChildAge: (childId: string, age: number | undefined) => Promise<void>;
   updateChildFurigana: (childId: string, enabled: boolean) => Promise<void>;
@@ -628,17 +628,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addChild = useCallback(
-    async (name: string): Promise<ChildUser> => {
+    async (name: string, age: number): Promise<ChildUser> => {
       if (!familyId) throw new Error("認証されていません");
       const { uid, code } = await createUniqueMemberAccount();
       await setDoc(doc(db, "families", familyId, "members", uid), {
         role: "owner",
         name,
+        age,
         loginCode: code,
         createdAt: new Date().toISOString(),
       });
       await setDoc(doc(db, "memberIndex", uid), { familyId, role: "owner" });
-      return { id: uid, role: "owner", name, adminId: familyId, loginCode: code };
+      return { id: uid, role: "owner", name, adminId: familyId, loginCode: code, age };
     },
     [familyId]
   );
