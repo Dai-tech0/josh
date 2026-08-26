@@ -8,6 +8,7 @@ import { Suspense, useState } from "react";
 import DailyReportBoard from "@/components/DailyReportBoard";
 import AuthGate from "@/components/AuthGate";
 import DevDashboard from "@/components/DevDashboard";
+import ServiceIntro from "@/components/ServiceIntro";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -28,9 +29,12 @@ export default function Home() {
 
   if (!currentUser) {
     return (
-      <Suspense fallback={<p className="text-slate-500 text-sm">読み込み中...</p>}>
-        <AuthGate />
-      </Suspense>
+      <div className="space-y-8">
+        <Suspense fallback={<p className="text-slate-500 text-sm">読み込み中...</p>}>
+          <AuthGate />
+        </Suspense>
+        <ServiceIntro />
+      </div>
     );
   }
 
