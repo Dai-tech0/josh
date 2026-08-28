@@ -23,11 +23,14 @@ export default function GrowCastBanner({ size }: { size: "sm" | "lg" }) {
         href={GROWCAST_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2.5 border border-slate-200 rounded-full bg-white pl-2 pr-4 py-2 hover:border-teal-300 transition w-fit"
+        className="flex items-center gap-3 border border-slate-200 rounded-lg bg-white px-4 py-3 hover:border-teal-300 transition"
       >
-        <PlayIcon className="w-7 h-7 shrink-0" />
-        <span className="text-sm font-bold text-slate-800">GrowCast</span>
-        <span className="text-xs text-teal-600">見てみる →</span>
+        <PlayIcon className="w-9 h-9 shrink-0" />
+        <p className="flex-1 min-w-0 text-sm text-slate-700">
+          <span className="font-bold text-slate-800">GrowCast</span> — 学びたい動画を、自分だけの
+          <span className="font-bold text-teal-700">放送局</span>に📺
+        </p>
+        <span className="text-xs font-medium text-teal-600 shrink-0">見てみる →</span>
       </a>
     );
   }
