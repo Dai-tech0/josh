@@ -254,11 +254,12 @@ function ReferralSection() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const referralUrl = `${origin}/?ref=${myReferralCode}`;
-  const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent("宿題管理アプリ「Yatta」使ってみて！")}`;
+  const referralMessage = "宿題管理アプリ「Yatta」使ってみて！";
+  const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(referralMessage)}`;
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(referralUrl);
+      await navigator.clipboard.writeText(`${referralMessage}\n${referralUrl}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -269,7 +270,7 @@ function ReferralSection() {
   return (
     <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="font-semibold">友達に教える</h2>
+        <h2 className="font-semibold">Yattaを友達に教える</h2>
         {referralCount > 0 && (
           <span className="text-xs text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
             これまで{referralCount}人が紹介から登録しました
@@ -293,7 +294,7 @@ function ReferralSection() {
           onClick={handleCopy}
           className="text-sm border border-slate-400 rounded px-4 py-2 text-slate-600 hover:border-indigo-400"
         >
-          {copied ? "コピーしました" : "リンクをコピー"}
+          {copied ? "コピーしました" : "紹介文をコピー"}
         </button>
         <span className="text-xs text-slate-400 font-mono break-all">{referralUrl}</span>
       </div>

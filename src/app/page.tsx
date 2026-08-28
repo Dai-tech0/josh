@@ -10,6 +10,7 @@ import AuthGate from "@/components/AuthGate";
 import DevDashboard from "@/components/DevDashboard";
 import ServiceIntro from "@/components/ServiceIntro";
 import GrowCastBanner from "@/components/GrowCastBanner";
+import ReferralBanner from "@/components/ReferralBanner";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -53,6 +54,7 @@ export default function Home() {
         </p>
       </div>
       {currentUser.role === "admin" && <AdminAlerts adminId={currentUser.id} />}
+      {currentUser.role === "admin" && <ReferralBanner />}
       {currentUser.role === "owner" && <DailyReportBoard childId={currentUser.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
