@@ -50,6 +50,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // 紹介コードごとの紹介人数カウンター。個人情報を含まない集計値のみなので、
+    // サインアップ時にまだ自分の家族しか持たない新規ユーザーでも書き込めるよう広めに許可する
+    match /referralStats/{code} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
     // 全ユーザー共通の掲示板（家族の垣根を越えて閲覧・投稿できるフィードボード）
     match /feedback/{postId} {
       allow read: if isSignedIn();

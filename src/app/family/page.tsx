@@ -238,8 +238,66 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
         </form>
       </section>
 
+      <ReferralSection />
+
       <RolePermissionTable />
     </div>
+  );
+}
+
+/** 友達紹介リンク。紹介経由の新規登録数はコストゼロの「見える化」だけで応援する */
+function ReferralSection() {
+  const { myReferralCode, referralCount } = useStore();
+  const [copied, setCopied] = useState(false);
+
+  if (!myReferralCode) return null;
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const referralUrl = `${origin}/?ref=${myReferralCode}`;
+  const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent("宿題管理アプリ「Yatta」使ってみて！")}`;
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(referralUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // クリップボードが使えない環境では何もしない
+    }
+  }
+
+  return (
+    <section className="border border-slate-200 rounded-lg bg-white p-5 space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="font-semibold">友達に教える</h2>
+        {referralCount > 0 && (
+          <span className="text-xs text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+            これまで{referralCount}人が紹介から登録しました
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-slate-500">
+        このリンクから登録すると、あなたの紹介として記録されます。
+      </p>
+      <div className="flex flex-wrap gap-2 items-center">
+        <a
+          href={lineShareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#06C755] text-white text-sm px-4 py-2 rounded hover:brightness-95"
+        >
+          LINEで送る
+        </a>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="text-sm border border-slate-400 rounded px-4 py-2 text-slate-600 hover:border-indigo-400"
+        >
+          {copied ? "コピーしました" : "リンクをコピー"}
+        </button>
+        <span className="text-xs text-slate-400 font-mono break-all">{referralUrl}</span>
+      </div>
+    </section>
   );
 }
 

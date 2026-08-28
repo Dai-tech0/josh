@@ -16,14 +16,20 @@ export default function AuthGate() {
   const [tab, setTab] = useState<Tab>("adminLogin");
   const searchParams = useSearchParams();
 
+  const referredBy = searchParams.get("ref") ?? undefined;
+
   useEffect(() => {
     const requested = searchParams.get("tab");
     if (requested && TAB_PARAM_MAP[requested]) {
       // URL（外部からのリンク）で指定されたタブに合わせる
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTab(TAB_PARAM_MAP[requested]);
+    } else if (referredBy) {
+      // 紹介リンク（?ref=）で来た場合は新規登録タブを直接開く
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTab("adminSignup");
     }
-  }, [searchParams]);
+  }, [searchParams, referredBy]);
 
   return (
     <div className="space-y-6">
@@ -51,6 +57,7 @@ export default function AuthGate() {
         <AdminSignupForm
           onDone={() => setTab("adminLogin")}
           onBack={() => setTab("adminLogin")}
+          referredBy={referredBy}
         />
       )}
       {tab === "emailLink" && <EmailLinkForm />}
@@ -263,7 +270,15 @@ function PasswordResetForm({ initialEmail, onBack }: { initialEmail: string; onB
   );
 }
 
-function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+function AdminSignupForm({
+  onDone,
+  onBack,
+  referredBy,
+}: {
+  onDone: () => void;
+  onBack: () => void;
+  referredBy?: string;
+}) {
   const { signUpAdmin, authError } = useStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -274,7 +289,7 @@ function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () =>
     e.preventDefault();
     setSubmitting(true);
     try {
-      await signUpAdmin(email, password, name);
+      await signUpAdmin(email, password, name, referredBy);
       onDone();
     } catch {
       // authError はストア側で設定される
@@ -285,6 +300,11 @@ function AdminSignupForm({ onDone, onBack }: { onDone: () => void; onBack: () =>
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 max-w-sm">
+      {referredBy && (
+        <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+          お友達の紹介からのご登録ですね！
+        </p>
+      )}
       {authError && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
           {authError}

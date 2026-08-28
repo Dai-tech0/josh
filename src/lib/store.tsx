@@ -29,6 +29,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   onSnapshot,
   orderBy,
   query,
@@ -205,9 +206,16 @@ interface StoreContextValue {
   selectedChildId: string | null;
   selectChild: (childId: string | null) => void;
   sharedDeviceCode: string | null;
+  myReferralCode: string | null;
+  referralCount: number;
   getOrCreateSharedCode: () => Promise<string>;
   // 認証
-  signUpAdmin: (email: string, password: string, name: string) => Promise<void>;
+  signUpAdmin: (
+    email: string,
+    password: string,
+    name: string,
+    referredBy?: string
+  ) => Promise<void>;
   loginAdmin: (email: string, password: string) => Promise<void>;
   loginWithCode: (code: string) => Promise<void>;
   sendLoginLink: (email: string) => Promise<void>;
@@ -275,6 +283,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Array<{ id: string } & MemberDoc>>([]);
   const [tasks, setTasks] = useState<HomeworkTask[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
+  const [referralCount, setReferralCount] = useState(0);
 
   const [knownCodeAccounts, setKnownCodeAccounts] = useState<KnownCodeAccount[]>([]);
   const pendingCodeRef = useRef<string | null>(null);
@@ -491,6 +500,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [members]
   );
 
+  // 紹介コード。管理者本人のUIDから決め打ちで作るので、別途発行・保存する必要がない
+  const myReferralCode = useMemo(
+    () => (familyId ? familyId.slice(0, 8).toUpperCase() : null),
+    [familyId]
+  );
+
+  useEffect(() => {
+    if (!myReferralCode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setReferralCount(0);
+      return;
+    }
+    const unsub = onSnapshot(doc(db, "referralStats", myReferralCode), (snap) => {
+      setReferralCount((snap.data()?.count as number) ?? 0);
+    });
+    return unsub;
+  }, [myReferralCode]);
+
   // メールリンクでログインしたが、まだ家族(admin)アカウントとして登録されていない状態か
   // （子供・共有者は合成メールで判別し、除外する）
   const needsAdminProfile =
@@ -517,23 +544,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     pendingCodeRef.current = null;
   }, [currentUser]);
 
-  const signUpAdmin = useCallback(async (email: string, password: string, name: string) => {
-    setAuthError(null);
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = cred.user.uid;
-      await setDoc(doc(db, "families", uid), {
-        adminName: name,
-        adminEmail: email,
-        familyDefaults: defaultFamilyDefaults(),
-        createdAt: new Date().toISOString(),
-      });
-      await setDoc(doc(db, "memberIndex", uid), { familyId: uid, role: "admin" });
-    } catch (e) {
-      setAuthError(translateAuthError((e as { code?: string })?.code));
-      throw e;
-    }
-  }, []);
+  const signUpAdmin = useCallback(
+    async (email: string, password: string, name: string, referredBy?: string) => {
+      setAuthError(null);
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+        await setDoc(
+          doc(db, "families", uid),
+          sanitizeForFirestore({
+            adminName: name,
+            adminEmail: email,
+            familyDefaults: defaultFamilyDefaults(),
+            createdAt: new Date().toISOString(),
+            referredBy,
+          })
+        );
+        await setDoc(doc(db, "memberIndex", uid), { familyId: uid, role: "admin" });
+        if (referredBy) {
+          await setDoc(
+            doc(db, "referralStats", referredBy),
+            { count: increment(1) },
+            { merge: true }
+          );
+        }
+      } catch (e) {
+        setAuthError(translateAuthError((e as { code?: string })?.code));
+        throw e;
+      }
+    },
+    []
+  );
 
   const loginAdmin = useCallback(async (email: string, password: string) => {
     setAuthError(null);
@@ -885,6 +926,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     selectedChildId,
     selectChild,
     sharedDeviceCode,
+    myReferralCode,
+    referralCount,
     getOrCreateSharedCode,
     authError,
     signUpAdmin,
