@@ -1,3 +1,5 @@
+import FuriganaText from "./FuriganaText";
+
 const GROWCAST_URL = "https://my-tv-six-smoky.vercel.app";
 
 function PlayIcon({ className }: { className?: string }) {
@@ -15,8 +17,34 @@ function PlayIcon({ className }: { className?: string }) {
   );
 }
 
-/** 姉妹サービス GrowCast への誘導バナー。ログイン前は小さく、ログイン後は少し大きく目立たせる */
-export default function GrowCastBanner({ size }: { size: "sm" | "lg" }) {
+/**
+ * 姉妹サービス GrowCast への誘導バナー。
+ * ログイン前は小さく、ログイン後は少し大きく目立たせる。子供（オーナー）にはさらに
+ * カラフルで読みやすい専用デザイン（kid）を使う。
+ */
+export default function GrowCastBanner({ size }: { size: "sm" | "lg" | "kid" }) {
+  if (size === "kid") {
+    return (
+      <a
+        href={GROWCAST_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-teal-400 to-blue-500 px-5 py-4 shadow-md hover:brightness-105 active:scale-[0.99] transition"
+      >
+        <span className="text-4xl shrink-0">📺</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-extrabold text-white">
+            <FuriganaText text="動画" />で<FuriganaText text="得意" />をふやそう！
+          </p>
+          <p className="text-xs font-bold text-teal-50 mt-0.5">GrowCastで見てみよう</p>
+        </div>
+        <span className="text-sm font-extrabold text-teal-700 bg-white rounded-full px-4 py-2.5 shrink-0 whitespace-nowrap">
+          いくよ！ →
+        </span>
+      </a>
+    );
+  }
+
   if (size === "sm") {
     return (
       <a

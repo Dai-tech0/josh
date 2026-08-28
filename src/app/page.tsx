@@ -74,7 +74,7 @@ export default function Home() {
           </p>
         </Link>
       </div>
-      <GrowCastBanner size="lg" />
+      <GrowCastBanner size={currentUser.role === "owner" ? "kid" : "lg"} />
     </div>
   );
 }
