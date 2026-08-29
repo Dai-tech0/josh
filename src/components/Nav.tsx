@@ -95,7 +95,7 @@ export default function Nav() {
             {currentUser && (
               <span className="hidden sm:inline text-slate-500">
                 {currentUser.name}
-                {!isSharedDevice && (
+                {!isSharedDevice && currentUser.role !== "owner" && (
                   <span className="ml-1 text-xs text-slate-500">
                     ({ROLE_LABEL[currentUser.role]})
                   </span>

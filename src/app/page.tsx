@@ -45,13 +45,28 @@ export default function Home() {
     return <DevDashboard />;
   }
 
+  const familyCardDesc =
+    currentUser.role === "admin"
+      ? "子供アカウントの追加、共有者（応援してくれる人）の管理を行います。"
+      : currentUser.role === "owner"
+      ? "自分を応援してくれる共有者を追加・削除できます。"
+      : "応援している子供の情報を見られます（閲覧のみ）。";
+  const tasksCardDesc =
+    currentUser.role === "admin"
+      ? "課題の登録、自動配分されたノルマの確認、日々の報告を行います。"
+      : currentUser.role === "owner"
+      ? "課題の進み具合を確認し、今日のぶんを報告できます。"
+      : "応援している子供の課題・進捗を見られます（閲覧のみ）。";
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold">こんにちは、{currentUser.name}さん</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          役割: {ROLE_LABEL[currentUser.role]}
-        </p>
+        {currentUser.role !== "owner" && (
+          <p className="text-sm text-slate-500 mt-1">
+            役割: {ROLE_LABEL[currentUser.role]}
+          </p>
+        )}
       </div>
       {currentUser.role === "admin" && <AdminAlerts adminId={currentUser.id} />}
       {currentUser.role === "admin" && <ReferralBanner />}
@@ -62,18 +77,14 @@ export default function Home() {
           className="block border border-slate-200 rounded-lg p-5 bg-white hover:border-indigo-400 transition"
         >
           <h2 className="font-semibold">家族・権限管理</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            子供アカウントの追加、共有者（応援してくれる人）の管理を行います。
-          </p>
+          <p className="text-sm text-slate-500 mt-1">{familyCardDesc}</p>
         </Link>
         <Link
           href="/tasks"
           className="block border border-slate-200 rounded-lg p-5 bg-white hover:border-indigo-400 transition"
         >
           <h2 className="font-semibold">課題・目標管理</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            課題の登録、自動配分されたノルマの確認、日々の報告を行います。
-          </p>
+          <p className="text-sm text-slate-500 mt-1">{tasksCardDesc}</p>
         </Link>
       </div>
       <GrowCastBanner size={currentUser.role === "owner" ? "kid" : "lg"} />

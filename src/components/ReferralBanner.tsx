@@ -3,11 +3,18 @@
 import { useStore } from "@/lib/store";
 import Link from "next/link";
 
-/** 親のホーム画面に置く、友達紹介への軽い誘導バナー。詳細（コピー・LINE送信）は家族・権限ページにある */
+/**
+ * 親のホーム画面に置く、友達紹介への軽い誘導バナー。詳細（コピー・LINE送信）は家族・権限ページにある。
+ * まだ子供を1人も登録していない（＝Yattaの価値をまだ体験していない）段階では、
+ * 紹介を促すのは早すぎるため表示しない。
+ */
 export default function ReferralBanner() {
-  const { myReferralCode, referralCount } = useStore();
+  const { myReferralCode, referralCount, currentUser, getChildrenOfAdmin } = useStore();
 
-  if (!myReferralCode) return null;
+  const hasChildren =
+    currentUser?.role === "admin" && getChildrenOfAdmin(currentUser.id).length > 0;
+
+  if (!myReferralCode || !hasChildren) return null;
 
   return (
     <Link

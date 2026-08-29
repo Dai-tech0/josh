@@ -74,6 +74,7 @@ export default function BatchTaskForm({
   const [rangeInputs, setRangeInputs] = useState<
     Record<string, { label: string; start: string; end: string }>
   >({});
+  const [advancedOpen, setAdvancedOpen] = useState<Record<string, boolean>>({});
 
   function rangeInputFor(key: string) {
     return rangeInputs[key] ?? { label: "", start: todayISO(), end: todayISO() };
@@ -319,6 +320,21 @@ export default function BatchTaskForm({
               </div>
             </div>
 
+            <button
+              type="button"
+              onClick={() =>
+                setAdvancedOpen((prev) => ({ ...prev, [entry.key]: !prev[entry.key] }))
+              }
+              className="text-xs text-indigo-600 hover:underline"
+            >
+              {advancedOpen[entry.key] ? "▼" : "▶"} 詳細設定（休止日など）
+              {(entry.weeklyDays.length > 0 || entry.customRanges.length > 0) &&
+                !advancedOpen[entry.key] &&
+                "・設定あり"}
+            </button>
+
+            {advancedOpen[entry.key] && (
+              <>
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-2">
                 休止日（毎週）
@@ -410,6 +426,8 @@ export default function BatchTaskForm({
                 </button>
               </div>
             </div>
+              </>
+            )}
           </div>
         );
       })}
