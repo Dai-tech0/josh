@@ -4,6 +4,7 @@ import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 import Nav from "@/components/Nav";
 import RequireChildSelection from "@/components/RequireChildSelection";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         <StoreProvider>
+          <AnalyticsTracker />
           <Nav />
           <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
             <RequireChildSelection>{children}</RequireChildSelection>
