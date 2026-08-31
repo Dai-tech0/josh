@@ -550,16 +550,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         const uid = cred.user.uid;
-        await setDoc(
-          doc(db, "families", uid),
-          sanitizeForFirestore({
-            adminName: name,
-            adminEmail: email,
-            familyDefaults: defaultFamilyDefaults(),
-            createdAt: new Date().toISOString(),
-            referredBy,
-          })
-        );
+        await setDoc(doc(db, "families", uid), {
+          adminName: name,
+          adminEmail: email,
+          familyDefaults: defaultFamilyDefaults(),
+          createdAt: new Date().toISOString(),
+          ...(referredBy ? { referredBy } : {}),
+        });
         await setDoc(doc(db, "memberIndex", uid), { familyId: uid, role: "admin" });
         if (referredBy) {
           await setDoc(
@@ -878,17 +875,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const authorName = currentUser?.name ?? (isDeveloper ? "開発者" : firebaseUser.email ?? "匿名");
       const authorRole: FeedbackPost["authorRole"] = currentUser?.role ?? "developer";
       const ref = doc(collection(db, "feedback"));
-      await setDoc(
-        ref,
-        sanitizeForFirestore({
-          authorId: firebaseUser.uid,
-          authorName,
-          authorRole,
-          message: trimmed,
-          createdAt: new Date().toISOString(),
-          parentId,
-        })
-      );
+      await setDoc(ref, {
+        authorId: firebaseUser.uid,
+        authorName,
+        authorRole,
+        message: trimmed,
+        createdAt: new Date().toISOString(),
+        ...(parentId ? { parentId } : {}),
+      });
     },
     [firebaseUser, currentUser, isDeveloper]
   );
