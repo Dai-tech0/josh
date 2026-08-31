@@ -238,19 +238,23 @@ function AdminFamilyView({ adminId }: { adminId: string }) {
         </form>
       </section>
 
-      <ReferralSection />
+      <ReferralSection hasChildren={children.length > 0} />
 
       <RolePermissionTable />
     </div>
   );
 }
 
-/** 友達紹介リンク。紹介経由の新規登録数はコストゼロの「見える化」だけで応援する */
-function ReferralSection() {
+/**
+ * 友達紹介リンク。紹介経由の新規登録数はコストゼロの「見える化」だけで応援する。
+ * まだ子供を登録していない（＝Yattaをまだ体験していない）段階では時期尚早なので表示しない
+ * （ホーム画面のReferralBannerと同じ方針）。
+ */
+function ReferralSection({ hasChildren }: { hasChildren: boolean }) {
   const { myReferralCode, referralCount } = useStore();
   const [copied, setCopied] = useState(false);
 
-  if (!myReferralCode) return null;
+  if (!myReferralCode || !hasChildren) return null;
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const referralUrl = `${origin}/?ref=${myReferralCode}`;
