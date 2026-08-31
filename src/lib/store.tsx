@@ -38,7 +38,15 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { auth, db, firebaseConfig } from "./firebase";
+import { auth, db, firebaseConfig, getFirebaseAnalytics } from "./firebase";
+import { logEvent } from "firebase/analytics";
+
+/** コンバージョン計測: 保護者アカウントの新規作成が完了した瞬間 */
+function trackSignUpConversion(method: "password" | "email_link") {
+  getFirebaseAnalytics().then((analytics) => {
+    if (analytics) logEvent(analytics, "sign_up", { method });
+  });
+}
 import type {
   AdminUser,
   AppData,
@@ -565,6 +573,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             { merge: true }
           );
         }
+        trackSignUpConversion("password");
       } catch (e) {
         setAuthError(translateAuthError((e as { code?: string })?.code));
         throw e;
@@ -630,6 +639,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     });
     await setDoc(doc(db, "memberIndex", uid), { familyId: uid, role: "admin" });
+    trackSignUpConversion("email_link");
   }, [firebaseUser]);
 
   const logout = useCallback(async () => {
