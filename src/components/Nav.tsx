@@ -68,29 +68,29 @@ export default function Nav() {
             </Link>
           </nav>
         )}
-        <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600">
+        <Link href="/guide" className="text-sm text-slate-500 hover:text-indigo-600 whitespace-nowrap">
           使い方ガイド
         </Link>
         {(currentUser || isDeveloper || isSharedDevice || currentUserId) && (
-          <nav className="flex items-center gap-3 text-sm">
+          <nav className="flex items-center flex-wrap gap-3 text-sm">
             {currentUser && (
               <>
-                <Link href="/family" className="text-slate-600 hover:text-indigo-600">
+                <Link href="/family" className="text-slate-600 hover:text-indigo-600 whitespace-nowrap">
                   <FuriganaText text="家族・権限" />
                 </Link>
-                <Link href="/tasks" className="text-slate-600 hover:text-indigo-600">
+                <Link href="/tasks" className="text-slate-600 hover:text-indigo-600 whitespace-nowrap">
                   <FuriganaText text="課題・目標" />
                 </Link>
               </>
             )}
             <Link
               href="/feedback"
-              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full font-medium"
+              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full font-medium whitespace-nowrap"
             >
               💬 フィードバック
             </Link>
             {isDeveloper && (
-              <Link href="/dev" className="text-slate-600 hover:text-indigo-600">
+              <Link href="/dev" className="text-slate-600 hover:text-indigo-600 whitespace-nowrap">
                 開発者
               </Link>
             )}
@@ -119,7 +119,7 @@ export default function Nav() {
                 onChange={(e) => {
                   if (e.target.value) loginWithCode(e.target.value);
                 }}
-                className="border border-slate-400 rounded px-2 py-1 text-xs bg-white text-slate-600"
+                className="border border-slate-400 rounded px-2 py-1 text-xs bg-white text-slate-600 max-w-[9rem]"
               >
                 <option value="">他のアカウントに切替</option>
                 {switchableAccounts.map((a) => (
@@ -131,7 +131,7 @@ export default function Nav() {
             )}
             <button
               onClick={() => logout()}
-              className="text-slate-500 hover:text-red-500 underline underline-offset-2"
+              className="text-slate-500 hover:text-red-500 underline underline-offset-2 whitespace-nowrap"
             >
               ログアウト
             </button>
