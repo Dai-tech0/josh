@@ -11,6 +11,7 @@ import DevDashboard from "@/components/DevDashboard";
 import ServiceIntro from "@/components/ServiceIntro";
 import GrowCastBanner from "@/components/GrowCastBanner";
 import ReferralBanner from "@/components/ReferralBanner";
+import FeedbackPrompt from "@/components/FeedbackPrompt";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者（親）",
@@ -87,6 +88,7 @@ export default function Home() {
           <p className="text-sm text-slate-500 mt-1">{tasksCardDesc}</p>
         </Link>
       </div>
+      <FeedbackPrompt />
       <GrowCastBanner size={currentUser.role === "owner" ? "kid" : "lg"} />
     </div>
   );

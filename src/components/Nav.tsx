@@ -83,8 +83,11 @@ export default function Nav() {
                 </Link>
               </>
             )}
-            <Link href="/feedback" className="text-slate-600 hover:text-indigo-600">
-              フィードバック
+            <Link
+              href="/feedback"
+              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full font-medium"
+            >
+              💬 フィードバック
             </Link>
             {isDeveloper && (
               <Link href="/dev" className="text-slate-600 hover:text-indigo-600">

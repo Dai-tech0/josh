@@ -79,6 +79,9 @@ export const FURIGANA_DICT: Record<string, string> = {
   総量: "そうりょう",
   動画: "どうが",
   得意: "とくい",
+  要望: "ようぼう",
+  意見: "いけん",
+  送: "おく",
 };
 
 interface FuriganaToken {
